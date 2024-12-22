@@ -1,53 +1,61 @@
-<script setup>
-const username = "Jean Dupont"; // Remplacez ceci par la variable dynamique correspondant au nom de l'utilisateur connecté.
-</script>
-
 <template>
-  <div class="homepage">
-    <header class="main-header">
-      <div class="user-info">
-        <p>Connecté en tant que : <strong>{{ username }}</strong></p>
-      </div>
-      <h1>Bienvenue sur le Dictionnaire de Voitures</h1>
-    </header>
+  <div id="app">
+    <!-- Navbar Section -->
+    <nav class="navbar">
+      <ul class="navbar-links">
+        <li><router-link to="/" class="navbar-item">Accueil</router-link></li>
+        <li><router-link to="/register" class="navbar-item">Inscription</router-link></li>
+        <li><router-link to="/login" class="navbar-item">Connexion</router-link></li>
+        <li><router-link to="/search" class="navbar-item">Voitures</router-link></li>
 
-    <main class="main-content">
-      <!-- Search Section -->
-      <section id="search" class="section">
-        <h2>Rechercher une Voiture</h2>
-        <p>Recherchez des informations sur vos voitures préférées par nom, marque, moteur, ou puissance.</p>
-        <p>Affinez votre recherche grâce à nos filtres avancés : marque, type de moteur, puissance, et bien plus.</p>
-        <button class="btn">Commencez votre recherche</button>
-      </section>
+      </ul>
+    </nav>
 
-      <!-- Register Section -->
-      <section id="register" class="section">
-        <h2>Register</h2>
-        <p>
-          Rejoignez notre communauté en créant un compte. En tant qu'utilisateur, vous pourrez :
-        </p>
-        <ul>
-          <li>Donner votre avis sur les voitures et partager vos expériences.</li>
-          <li>Proposer de nouvelles informations ou modèles à ajouter.</li>
-        </ul>
-        <p>Les administrateurs vérifieront vos propositions et les intégreront si elles sont pertinentes.</p>
-        <button class="btn">Créer un compte</button>
-      </section>
-
-      <!-- Login Section -->
-      <section id="login" class="section">
-        <h2>Login</h2>
-        <p>Déjà un compte ?</p>
-        <p>
-          Cliquez ci-dessous pour vous connecter à votre compte et profiter de toutes nos fonctionnalités :
-        </p>
-
-        <button class="btn">Se connecter</button>
-      </section>
-    </main>
+    <!-- The page content will be rendered here -->
+    <router-view></router-view>
   </div>
 </template>
 
+<script setup>
+</script>
 
+<style scoped>
+/* Basic Styles for Navbar */
+.navbar {
+  background-color: #333;
+  padding: 10px 0;
+  text-align: center;
+}
 
-<style src="./assets/main.css"></style>
+.navbar-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+}
+
+.navbar-item {
+  text-decoration: none;
+  color: white;
+  padding: 15px 25px;
+  font-size: 18px;
+}
+
+.navbar-item:hover {
+  background-color: #575757;
+  border-radius: 5px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .navbar-links {
+    flex-direction: column;
+  }
+
+  .navbar-item {
+    padding: 12px 20px;
+    font-size: 16px;
+  }
+}
+</style>
