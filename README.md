@@ -2,6 +2,8 @@
 
 ## How to set up the project
 
+### Back-end (Django)
+
 1. Create a conda environment
 
 ```bash
@@ -31,8 +33,39 @@ GRANT
 ```
 4. Migrate to create tables
 ```bash
+cd carinspector
 python manage.py migrate
 ```
+5. Launch the back-end server
+```bash
+python manage.py runserver
+```
+
+### Front-end (Vue.js)
+
+1. Install Node.js and npm
+
+Vue.js requires Node.js to work.
+
+Download and install Node.js from the official website: Node.js.
+Install the LTS version (recommended for stability).
+Verify that Node.js and npm are properly installed:
+```bash
+node -v
+npm -v
+```
+
+2. Install dependencies and Axios
+```bash
+cd vue-project
+npm install
+npm install axios
+```
+3. Start the development server
+```bash
+npm run dev
+```
+By default, the project will be accessible at: http://localhost:5173.
 
 
 
