@@ -4,7 +4,8 @@ import { createRouter, createWebHistory } from 'vue-router'
 import RegisterPage from './components/RegisterPage.vue'
 import LoginPage from './components/LoginPage.vue'
 import HomePage from './components/HomePage.vue'
-import SearchPage from './components/SearchPage.vue'; // Add this import
+import SearchPage from './components/SearchPage.vue' // Add this import
+import BrandsPage from './components/BrandsPage.vue';
 
 const routes = [
     {
@@ -27,6 +28,11 @@ const routes = [
         name: 'Search',
         component: SearchPage,  // Ensure you have a SearchPage component
     },
+    {
+        path: '/brands',
+        name: 'Brands',
+        component: BrandsPage,
+    }
 ];
 
 const router = createRouter({

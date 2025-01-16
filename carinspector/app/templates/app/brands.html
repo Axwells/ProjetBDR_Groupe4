@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Liste des Marques</title>
+</head>
+<body>
+    <h1>Marques existantes</h1>
+    <ul>
+        {% for brand in brands %}
+            <li>
+                <strong>{{ brand.name }}</strong> 
+                {% if brand.image %}
+                    <img src="{{ brand.image }}" alt="{{ brand.name }}" style="max-height: 100px;">
+                {% else %}
+                    <span>(Pas d'image disponible)</span>
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
