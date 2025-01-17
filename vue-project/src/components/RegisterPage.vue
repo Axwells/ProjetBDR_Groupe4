@@ -4,38 +4,74 @@
         <form @submit.prevent="handleRegister">
             <div class="form-group">
                 <label for="username">Nom d'utilisateur :</label>
-                <input type="text" id="username" v-model="username" placeholder="Entrez votre nom d'utilisateur"
-                    required />
+                <input
+                    type="text"
+                    id="username"
+                    v-model="username"
+                    placeholder="Entrez votre nom d'utilisateur"
+                    required
+                />
             </div>
             <div class="form-group">
                 <label for="email">Email :</label>
-                <input type="email" id="email" v-model="email" placeholder="Entrez votre adresse email" required />
+                <input
+                    type="email"
+                    id="email"
+                    v-model="email"
+                    placeholder="Entrez votre adresse email"
+                    required
+                />
             </div>
             <div class="form-group">
                 <label for="password">Mot de passe :</label>
-                <input type="password" id="password" v-model="password" placeholder="Entrez votre mot de passe"
-                    required />
+                <input
+                    type="password"
+                    id="password"
+                    v-model="password"
+                    placeholder="Entrez votre mot de passe"
+                    required
+                />
             </div>
             <button type="submit" class="btn">S'inscrire</button>
         </form>
+        <p v-if="error" class="error-message">{{ error }}</p>
         <p>Vous avez déjà un compte ? <router-link to="/login">Se connecter</router-link></p>
     </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref } from 'vue';
+import axios from 'axios';
 
-const username = ref('')
-const email = ref('')
-const password = ref('')
+const username = ref('');
+const email = ref('');
+const password = ref('');
+const error = ref('');
 
-const handleRegister = () => {
-    // Code pour gérer l'inscription ici (ex: appel à une API)
-    console.log('Nom d\'utilisateur:', username.value)
-    console.log('Email:', email.value)
-    console.log('Mot de passe:', password.value)
-    // Après l'inscription réussie, rediriger vers la page de login ou accueil
-}
+const handleRegister = async () => {
+    error.value = ''; // Reset error message
+    try {
+        const response = await axios.post('http://127.0.0.1:8000/app/register/', {
+            email: email.value,
+            username: username.value,
+            password: password.value,
+        });
+
+        if (response.status === 201) {
+            // Registration successful, redirect to login or dashboard
+            alert('Inscription réussie ! Vous pouvez vous connecter.');
+            window.location.href = '/login'; // Adjust this path to your actual login route
+        }
+    } catch (err) {
+        // Display error message
+        if (err.response && err.response.data) {
+            error.value = 'Une erreur est survenue lors de l\'inscription : ' + err.response.data.detail;
+        } else {
+            error.value = "Une erreur est survenue lors de l'inscription";
+        }
+        console.error(err);
+    }
+};
 </script>
 
 <style scoped>
@@ -69,8 +105,9 @@ button:hover {
     background-color: #45a049;
 }
 
-p {
-    text-align: center;
+.error-message {
+    color: red;
     margin-top: 10px;
+    text-align: center;
 }
 </style>

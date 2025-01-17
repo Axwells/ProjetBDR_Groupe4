@@ -3,6 +3,7 @@ from django.utils import timezone
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.db.models import CheckConstraint, Q, F
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 
 class Brand(models.Model):
     name = models.CharField(max_length=50, primary_key=True, db_column="name")
@@ -67,14 +68,40 @@ class Image(models.Model):
         unique_together = (("modelNameCar", "image"),)
 
 
-class AppUser(models.Model):
-    email = models.CharField(max_length=320, primary_key=True, db_column="email")
+class AppUserManager(BaseUserManager):
+    def create_user(self, email, username, password=None, **extra_fields):
+        if not email:
+            raise ValueError("The Email field must be set")
+        if not username:
+            raise ValueError("The Username field must be set")
+
+        email = self.normalize_email(email)
+        user = self.model(email=email, username=username, **extra_fields)
+        user.set_password(password)  # Hash password
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, email, username, password=None, **extra_fields):
+        # Superuser creation can still be handled, but no "is_superuser" field
+        return self.create_user(email, username, password, **extra_fields)
+
+
+class AppUser(AbstractBaseUser):
+    email = models.EmailField(primary_key=True, max_length=320, db_column="email")
     username = models.CharField(max_length=80, db_column="username")
-    password = models.CharField(max_length=80, db_column="password")
-    isSuperuser = models.BooleanField(default=False, db_column="isSuperUser")
+    password = models.CharField(max_length=128, db_column="password")
+
+    objects = AppUserManager()
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username']
 
     class Meta:
         db_table = "AppUser"
+
+    def __str__(self):
+        return self.email
+
 
 
 class Modification(models.Model):

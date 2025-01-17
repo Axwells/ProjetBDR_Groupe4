@@ -31,12 +31,17 @@ CREATE ROLE
 GRANT
 > exit
 ```
-4. Migrate to create tables
+4. Install Django REST Framework and CORS middleware
+```bash
+pip install djangorestframework djangorestframework-simplejwt
+pip install django-cors-headers
+```
+5. Migrate to create tables
 ```bash
 cd carinspector
 python manage.py migrate
 ```
-5. Launch the back-end server
+6. Launch the back-end server
 ```bash
 python manage.py runserver
 ```
