@@ -52,8 +52,7 @@ python manage.py runserver
 
 Vue.js requires Node.js to work.
 
-Download and install Node.js from the official website: Node.js.
-Install the LTS version (recommended for stability).
+Download and install the LTS version of Node.js from the official website: https://nodejs.org/en/download . \
 Verify that Node.js and npm are properly installed:
 ```bash
 node -v
