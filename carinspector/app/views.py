@@ -2,9 +2,9 @@ from django.shortcuts import render
 from django.db import connection
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .models import Brand, AppUser
+from .models import Brand, AppUser, Car
 from django.http import HttpResponse
-from .serializers import BrandSerializer, RegisterSerializer, LoginSerializer
+from .serializers import BrandSerializer, RegisterSerializer, LoginSerializer, CarSerializer
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
@@ -89,3 +89,14 @@ class LogoutView(APIView):
             return Response({'message': 'Successfully logged out'}, status=status.HTTP_205_RESET_CONTENT)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class CarsByBrandView(APIView):
+    def get(self, request, brand_name):
+        try:
+            brand = Brand.objects.get(name=brand_name)
+            cars = Car.objects.filter(nameBrand=brand)
+            serializer = CarSerializer(cars, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Brand.DoesNotExist:
+            return Response({"error": "Brand not found"}, status=status.HTTP_404_NOT_FOUND)

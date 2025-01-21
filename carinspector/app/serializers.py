@@ -1,6 +1,5 @@
 from rest_framework import serializers
-from .models import Brand
-from .models import AppUser
+from .models import Brand, Car, AppUser
 from django.contrib.auth import authenticate
 
 class BrandSerializer(serializers.ModelSerializer):
@@ -32,3 +31,8 @@ class LoginSerializer(serializers.Serializer):
         if user is None:
             raise serializers.ValidationError('Invalid email or password')
         return user
+
+class CarSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Car
+        fields = ['modelName', 'numberOfSeats', 'releaseDate', 'defaultPrice', 'nameBrand']

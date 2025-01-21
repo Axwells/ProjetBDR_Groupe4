@@ -7,6 +7,7 @@
         <li v-if="!authStore.isLoggedIn"><router-link to="/register" class="navbar-item">Inscription</router-link></li>
         <li v-if="!authStore.isLoggedIn"><router-link to="/login" class="navbar-item">Connexion</router-link></li>
         <li v-if="authStore.isLoggedIn"><router-link to="/" @click.prevent="handleLogout" class="navbar-item">Déconnexion</router-link></li>
+        <li><router-link to="/brands" class="navbar-item">Marques</router-link></li>
         <li><router-link to="/search" class="navbar-item">Voitures</router-link></li>
       </ul>
     </nav>
