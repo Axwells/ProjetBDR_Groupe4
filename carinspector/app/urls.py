@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import BrandListView, RegisterView, LoginView, LogoutView, CarsByBrandView, SpecificationsByCarView, CarDetailsView
+from .views import BrandListView, RegisterView, LoginView, LogoutView, CarsByBrandView, SpecificationsByCarView, CarDetailsView, SearchCarsView
 
 from . import views
 
@@ -14,4 +14,5 @@ urlpatterns = [
     path('cars/<str:brand_name>/', CarsByBrandView.as_view(), name='cars-by-brand'),
     path('specifications/<str:model_name_car>/', SpecificationsByCarView.as_view(), name='specifications-by-car'),
     path('cars/details/<str:model_name_car>/', CarDetailsView.as_view(), name='car-details'),
+    path("search", SearchCarsView.as_view(), name="search-cars"),
 ]

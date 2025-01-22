@@ -260,3 +260,64 @@ class CarDetailsView(APIView):
             return Response(car_details, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class SearchCarsView(APIView):
+    def get(self, request):
+        car_name = request.query_params.get("carName", "")
+        car_brand = request.query_params.get("carBrand", "")
+        car_engine = request.query_params.get("carEngine", "").lower()  # "essence" ou "electrique"
+        car_power = request.query_params.get("carPower", None)
+
+        try:
+            with connection.cursor() as cursor:
+                query = """
+                    SELECT DISTINCT c."modelName", c."numberOfSeats", c."releaseDate", 
+                                    c."defaultPrice", b."name" AS brandName, i."image"
+                    FROM "Car" c
+                    LEFT JOIN "Brand" b ON c."nameBrand" = b."name"
+                    LEFT JOIN "Image" i ON c."modelName" = i."modelNameCar"
+                    LEFT JOIN "Specification" s ON c."modelName" = s."modelNameCar"
+                    LEFT JOIN "Specification_Engine" se ON s."id" = se."idSpecification"
+                    LEFT JOIN "Engine" e ON se."modelNameEngine" = e."modelName"
+                    LEFT JOIN "Gas" g ON e."modelName" = g."modelNameEngine"
+                    LEFT JOIN "Electric" el ON e."modelName" = el."modelNameEngine"
+                    WHERE (%s = '' OR c."modelName" ILIKE %s)
+                      AND (%s = '' OR b."name" ILIKE %s)
+                      AND (%s = '' OR (
+                          CASE 
+                              WHEN g."modelNameEngine" IS NOT NULL THEN 'essence'
+                              WHEN el."modelNameEngine" IS NOT NULL THEN 'electrique'
+                              ELSE NULL
+                          END
+                      ) = %s)
+                      AND (%s IS NULL OR e."horsePower" >= %s)
+                """
+                params = [
+                    car_name, f"%{car_name}%", 
+                    car_brand, f"%{car_brand}%", 
+                    car_engine, car_engine, 
+                    car_power, car_power
+                ]
+                cursor.execute(query, params)
+                results = cursor.fetchall()
+
+            # Formater les résultats
+            cars = {}
+            for row in results:
+                model_name = row[0]
+                if model_name not in cars:
+                    cars[model_name] = {
+                        "modelName": row[0],
+                        "numberOfSeats": row[1],
+                        "releaseDate": row[2],
+                        "defaultPrice": row[3],
+                        "brandName": row[4],
+                        "images": [],
+                    }
+                if row[5]:  # Ajouter l'image si elle existe
+                    cars[model_name]["images"].append({"image": row[5]})
+
+            return Response(list(cars.values()), status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

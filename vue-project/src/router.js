@@ -14,7 +14,7 @@ import SpecsPage from './components/SpecsPage.vue';
 const routes = [
     {
         path: '/',
-        name: 'Home',  // Changed path to '/' to match root
+        name: 'Home',
         component: HomePage,
     },
     {
@@ -30,7 +30,7 @@ const routes = [
     {
         path: '/search',
         name: 'Search',
-        component: SearchPage,  // Ensure you have a SearchPage component
+        component: SearchPage,
     },
     {
         path: '/brands',
@@ -38,15 +38,15 @@ const routes = [
         component: BrandsPage,
     },
     {
-        path: '/cars/:brandName',
-        name: 'CarsPage',
-        component: CarsPage,
-    },
-    {
         path: "/specs/:modelName",
         name: "SpecsPage",
         component: SpecsPage,
-      },
+    },
+    {
+        path: "/search/results",
+        name: "CarsPage",
+        component: CarsPage,
+    },
 ];
 
 const router = createRouter({

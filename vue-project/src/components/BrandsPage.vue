@@ -52,7 +52,15 @@ onMounted(async () => {
 });
 
 const goToBrandCars = (brandName) => {
-    router.push({ name: 'CarsPage', params: { brandName } });
+    const query = {
+    carName: "",
+    carBrand: brandName,
+    carEngine: "",
+    carPower: null,
+  };
+
+  // Redirige vers la page des résultats avec les critères de recherche
+  router.push({ name: "CarsPage", query });
 };
 </script>
 

@@ -1,7 +1,7 @@
 <template>
   <div class="cars-page">
     <header class="main-header">
-      <h1>Voitures de la marque : {{ brandName }}</h1>
+      <h1>Résultats de la Recherche</h1>
     </header>
 
     <main v-if="cars.length > 0" class="main-content">
@@ -13,6 +13,7 @@
           @click="goToSpecsPage(car.modelName)"
         >
           <h2>{{ car.modelName }}</h2>
+          <p><strong>Marque :</strong> {{ car.brandName }}</p>
           <p><strong>Nombre de sièges :</strong> {{ car.numberOfSeats }}</p>
           <p><strong>Date de sortie :</strong> {{ car.releaseDate }}</p>
           <p><strong>Prix :</strong> {{ car.defaultPrice }} €</p>
@@ -39,7 +40,7 @@
     </main>
 
     <p v-else class="no-cars-message">
-      Aucune voiture disponible pour cette marque.
+      Aucun résultat trouvé pour vos critères de recherche.
     </p>
   </div>
 </template>
@@ -51,7 +52,7 @@ import axios from "axios";
 
 const route = useRoute();
 const router = useRouter();
-const brandName = ref(route.params.brandName);
+const searchParams = route.query; // Récupère les critères de recherche passés dans l'URL
 const cars = ref([]);
 
 // Navigation vers SpecsPage
@@ -59,15 +60,15 @@ const goToSpecsPage = (modelName) => {
   router.push({ name: "SpecsPage", params: { modelName } });
 };
 
-// Récupération des voitures
+// Récupération des résultats de la recherche
 onMounted(async () => {
   try {
-    const response = await axios.get(
-      `http://127.0.0.1:8000/app/cars/${brandName.value}/`
-    );
+    const response = await axios.get("http://127.0.0.1:8000/app/search", {
+      params: searchParams, // Transmet les paramètres de recherche à l'API
+    });
     cars.value = response.data;
   } catch (error) {
-    console.error("Erreur lors de la récupération des voitures :", error);
+    console.error("Erreur lors de la récupération des résultats :", error);
     cars.value = [];
   }
 });
@@ -100,6 +101,12 @@ onMounted(async () => {
   border-radius: 8px;
   padding: 15px;
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.car-item:hover {
+  transform: scale(1.02);
 }
 
 .car-item img {

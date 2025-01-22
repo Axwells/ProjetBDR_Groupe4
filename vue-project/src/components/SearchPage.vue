@@ -12,58 +12,45 @@
             <label for="car-brand">Marque:</label>
             <input type="text" id="car-brand" v-model="carBrand" placeholder="Entrez la marque" />
 
-            <label for="car-engine">Type de moteur:</label>
-            <input type="text" id="car-engine" v-model="carEngine" placeholder="Type de moteur" />
+            <label for="car-engine">Type de moteur :</label>
+            <select id="car-engine" v-model="carEngine">
+                <option value="">-- Choisissez un type --</option>
+                <option value="essence">Essence</option>
+                <option value="electrique">Électrique</option>
+            </select>
 
-            <label for="car-power">Puissance:</label>
+            <label for="car-power">Puissance minimale :</label>
             <input type="number" id="car-power" v-model="carPower" placeholder="Puissance en chevaux" />
 
             <button class="btn" @click="searchCars">Rechercher</button>
-        </section>
-
-        <section v-if="results.length > 0" class="search-results">
-            <h2>Résultats de la recherche:</h2>
-            <ul>
-                <li v-for="(car, index) in results" :key="index">
-                    <strong>{{ car.name }}</strong> - {{ car.brand }} - {{ car.engine }} - {{ car.power }} ch
-                </li>
-            </ul>
         </section>
     </div>
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref } from "vue";
+import { useRouter } from "vue-router";
 
-const carName = ref('');
-const carBrand = ref('');
-const carEngine = ref('');
-const carPower = ref('');
-const results = ref([]);
+const carName = ref("");
+const carBrand = ref("");
+const carEngine = ref("");
+const carPower = ref(null);
+
+const router = useRouter();
 
 const searchCars = () => {
-    // For now, mock search results, you can replace this with an actual search query to your backend or API
-    results.value = [
-        { name: 'Audi RS3', brand: 'Audi', engine: '5-cylinder', power: 400 },
-        { name: 'BMW M3', brand: 'BMW', engine: 'Inline-6', power: 500 },
-        { name: 'Mercedes-AMG C63', brand: 'Mercedes', engine: 'V8', power: 470 },
-    ];
+  const query = {
+    carName: carName.value,
+    carBrand: carBrand.value,
+    carEngine: carEngine.value,
+    carPower: carPower.value,
+  };
 
-    // Add basic filtering logic if necessary
-    if (carName.value) {
-        results.value = results.value.filter(car => car.name.toLowerCase().includes(carName.value.toLowerCase()));
-    }
-    if (carBrand.value) {
-        results.value = results.value.filter(car => car.brand.toLowerCase().includes(carBrand.value.toLowerCase()));
-    }
-    if (carEngine.value) {
-        results.value = results.value.filter(car => car.engine.toLowerCase().includes(carEngine.value.toLowerCase()));
-    }
-    if (carPower.value) {
-        results.value = results.value.filter(car => car.power >= carPower.value);
-    }
+  // Redirige vers la page des résultats avec les critères de recherche
+  router.push({ name: "CarsPage", query });
 };
 </script>
+
 
 <style scoped>
 .search-page {
