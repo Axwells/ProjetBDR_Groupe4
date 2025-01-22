@@ -6,7 +6,9 @@ import LoginPage from './components/LoginPage.vue'
 import HomePage from './components/HomePage.vue'
 import SearchPage from './components/SearchPage.vue'
 import BrandsPage from './components/BrandsPage.vue'
-import CarsPage from './components/CarsPage.vue';
+import CarsPage from './components/CarsPage.vue'
+import SpecsPage from './components/SpecsPage.vue';
+
 
 
 const routes = [
@@ -39,6 +41,11 @@ const routes = [
         path: '/cars/:brandName',
         name: 'CarsPage',
         component: CarsPage,
+    },
+    {
+        path: "/specs/:modelName",
+        name: "SpecsPage",
+        component: SpecsPage,
       },
 ];
 

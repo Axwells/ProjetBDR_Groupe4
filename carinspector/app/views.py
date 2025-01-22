@@ -2,9 +2,9 @@ from django.shortcuts import render
 from django.db import connection
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .models import Brand, AppUser, Car
+from .models import Brand, AppUser, Car, Specification
 from django.http import HttpResponse
-from .serializers import BrandSerializer, RegisterSerializer, LoginSerializer, CarSerializer
+from .serializers import BrandSerializer, RegisterSerializer, LoginSerializer, CarSerializer, SpecificationSerializer
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
@@ -136,3 +136,127 @@ class CarsByBrandView(APIView):
         cars_list = list(cars.values())
 
         return Response(cars_list, status=status.HTTP_200_OK)
+
+
+class SpecificationsByCarView(APIView):
+    def get(self, request, model_name_car):
+        try:
+            with connection.cursor() as cursor:
+                # SQL Query to fetch specifications and their associated engines
+                query = """
+                    SELECT 
+                        s."id" AS specification_id,
+                        b."id" AS brake_id,
+                        b."model" AS brake_model,
+                        b."abs" AS brake_abs,
+                        b."price" AS brake_price,
+                        t."id" AS transmission_id,
+                        t."type" AS transmission_type,
+                        t."numberOfGears" AS transmission_gears,
+                        t."drivetrain" AS transmission_drivetrain,
+                        t."price" AS transmission_price,
+                        p."id" AS performance_id,
+                        p."maxSpeed" AS performance_max_speed,
+                        p."zeroToHundredTime" AS performance_zero_to_hundred_time,
+                        e."modelName" AS engine_model_name,
+                        e."horsePower" AS engine_horse_power,
+                        e."position" AS engine_position,
+                        e."price" AS engine_price,
+                        e."nameBrand" AS engine_brand_name
+                    FROM "Specification" s
+                    INNER JOIN "Brake" b ON s."idBrake" = b."id"
+                    INNER JOIN "Transmission" t ON s."idTransmission" = t."id"
+                    INNER JOIN "Performance" p ON s."idPerformance" = p."id"
+                    LEFT JOIN "Specification_Engine" se ON s."id" = se."idSpecification"
+                    LEFT JOIN "Engine" e ON se."modelNameEngine" = e."modelName"
+                    WHERE s."modelNameCar" = %s
+                    ORDER BY s."id", e."modelName"  -- Order by specification ID and engine name
+                """
+                cursor.execute(query, [model_name_car])
+                results = cursor.fetchall()
+
+            # If no specifications are found
+            if not results:
+                return Response({"error": "No specifications found for this car"}, status=status.HTTP_404_NOT_FOUND)
+
+            # Format the results into JSON response
+            specifications_dict = {}
+            for row in results:
+                spec_id = row[0]
+                if spec_id not in specifications_dict:
+                    specifications_dict[spec_id] = {
+                        "id": row[0],
+                        "brake": {
+                            "id": row[1],
+                            "model": row[2],
+                            "abs": row[3],
+                            "price": row[4]
+                        },
+                        "transmission": {
+                            "id": row[5],
+                            "type": row[6],
+                            "numberOfGears": row[7],
+                            "drivetrain": row[8],
+                            "price": row[9]
+                        },
+                        "performance": {
+                            "id": row[10],
+                            "maxSpeed": row[11],
+                            "zeroToHundredTime": row[12]
+                        },
+                        "engines": []
+                    }
+                # Add engine details if present
+                if row[13]:
+                    specifications_dict[spec_id]["engines"].append({
+                        "modelName": row[13],
+                        "horsePower": row[14],
+                        "position": row[15],
+                        "price": row[16],
+                        "brandName": row[17]
+                    })
+
+            # Convert specifications_dict to a list
+            specifications = list(specifications_dict.values())
+
+            return Response(specifications, status=status.HTTP_200_OK)
+        
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class CarDetailsView(APIView):
+    def get(self, request, model_name_car):
+        try:
+            with connection.cursor() as cursor:
+                query = """
+                    SELECT 
+                        c."modelName",
+                        c."numberOfSeats",
+                        c."releaseDate",
+                        c."defaultPrice",
+                        b."name" AS brand_name,
+                        i."image" AS image_path
+                    FROM "Car" c
+                    INNER JOIN "Brand" b ON c."nameBrand" = b."name"
+                    LEFT JOIN "Image" i ON c."modelName" = i."modelNameCar"
+                    WHERE c."modelName" = %s
+                """
+                cursor.execute(query, [model_name_car])
+                rows = cursor.fetchall()
+
+            if not rows:
+                return Response({"error": "Car not found"}, status=status.HTTP_404_NOT_FOUND)
+
+            car_details = {
+                "modelName": rows[0][0],
+                "numberOfSeats": rows[0][1],
+                "releaseDate": rows[0][2],
+                "defaultPrice": rows[0][3],
+                "brandName": rows[0][4],
+                "images": [{"image": row[5]} for row in rows if row[5]]  # Collect all images
+            }
+
+            return Response(car_details, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

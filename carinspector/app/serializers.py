@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Brand, Car, AppUser, Image, Brake, Engine, Transmission, Performance, Category, Specification, Specification_Engine, Category_Specification
+from .models import Brand, Car, AppUser, Image, Brake, Engine, Transmission, Performance, Category, Specification, SpecificationEngine, CategorySpecification
 from django.contrib.auth import authenticate
 
 class BrandSerializer(serializers.ModelSerializer):
@@ -43,3 +43,55 @@ class CarSerializer(serializers.ModelSerializer):
     class Meta:
         model = Car
         fields = ['modelName', 'numberOfSeats', 'releaseDate', 'defaultPrice', 'nameBrand', 'images']
+
+
+class BrakeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Brake
+        fields = ['id', 'model', 'abs', 'price']
+
+
+class EngineSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Engine
+        fields = ['modelName', 'horsePower', 'position', 'price', 'nameBrand']
+
+
+class SpecificationEngineSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SpecificationEngine
+        fields = ['idSpecification', 'modelNameEngine']
+
+
+class TransmissionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Transmission
+        fields = ['id', 'type', 'numberOfGears', 'drivetrain', 'price']
+
+
+class PerformanceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Performance
+        fields = ['id', 'maxSpeed', 'zeroToHundredTime']
+
+
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ['name']
+
+
+class CategorySpecificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CategorySpecification
+        fields = ['nameCategory', 'idSpecification']
+
+
+class SpecificationSerializer(serializers.ModelSerializer):
+    idBrake = BrakeSerializer()
+    idTransmission = TransmissionSerializer()
+    idPerformance = PerformanceSerializer()
+
+    class Meta:
+        model = Specification
+        fields = ['id', 'modelNameCar', 'idBrake', 'idTransmission', 'idPerformance']

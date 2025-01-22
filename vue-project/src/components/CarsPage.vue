@@ -6,7 +6,12 @@
 
     <main v-if="cars.length > 0" class="main-content">
       <section class="cars-list">
-        <div v-for="car in cars" :key="car.modelName" class="car-item">
+        <div
+          v-for="car in cars"
+          :key="car.modelName"
+          class="car-item"
+          @click="goToSpecsPage(car.modelName)"
+        >
           <h2>{{ car.modelName }}</h2>
           <p><strong>Nombre de sièges :</strong> {{ car.numberOfSeats }}</p>
           <p><strong>Date de sortie :</strong> {{ car.releaseDate }}</p>
@@ -20,7 +25,11 @@
                 :key="image.id"
                 class="carousel-item"
               >
-                <img :src="`/images/cars/${image.image}`" :alt="`Image de ${car.modelName} - ${image.image}`" style="max-height: 100px;" />
+                <img
+                  :src="`/images/cars/${image.image}`"
+                  :alt="`Image de ${car.modelName} - ${image.image}`"
+                  style="max-height: 100px;"
+                />
               </div>
             </div>
             <p v-else>Aucune image disponible pour ce modèle.</p>
@@ -37,23 +46,29 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import axios from "axios";
 
 const route = useRoute();
-const brandName = ref(route.params.brandName); // Récupère la marque depuis l'URL
+const router = useRouter();
+const brandName = ref(route.params.brandName);
 const cars = ref([]);
 
-// Appel API pour récupérer les voitures de la marque
+// Navigation vers SpecsPage
+const goToSpecsPage = (modelName) => {
+  router.push({ name: "SpecsPage", params: { modelName } });
+};
+
+// Récupération des voitures
 onMounted(async () => {
   try {
     const response = await axios.get(
       `http://127.0.0.1:8000/app/cars/${brandName.value}/`
     );
-    cars.value = response.data; // Stocke les données des voitures
+    cars.value = response.data;
   } catch (error) {
     console.error("Erreur lors de la récupération des voitures :", error);
-    cars.value = []; // Définit une liste vide en cas d'erreur
+    cars.value = [];
   }
 });
 </script>
