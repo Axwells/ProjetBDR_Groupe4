@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Brand, Car, AppUser
+from .models import Brand, Car, AppUser, Image, Brake, Engine, Transmission, Performance, Category, Specification, Specification_Engine, Category_Specification
 from django.contrib.auth import authenticate
 
 class BrandSerializer(serializers.ModelSerializer):
@@ -32,7 +32,14 @@ class LoginSerializer(serializers.Serializer):
             raise serializers.ValidationError('Invalid email or password')
         return user
 
+class ImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Image
+        fields = ['id', 'image', 'modelNameCar']
+
 class CarSerializer(serializers.ModelSerializer):
+    images = ImageSerializer(many=True, read_only=True)
+
     class Meta:
         model = Car
-        fields = ['modelName', 'numberOfSeats', 'releaseDate', 'defaultPrice', 'nameBrand']
+        fields = ['modelName', 'numberOfSeats', 'releaseDate', 'defaultPrice', 'nameBrand', 'images']

@@ -93,10 +93,46 @@ class LogoutView(APIView):
 
 class CarsByBrandView(APIView):
     def get(self, request, brand_name):
-        try:
-            brand = Brand.objects.get(name=brand_name)
-            cars = Car.objects.filter(nameBrand=brand)
-            serializer = CarSerializer(cars, many=True)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        except Brand.DoesNotExist:
-            return Response({"error": "Brand not found"}, status=status.HTTP_404_NOT_FOUND)
+        # Requête SQL brute avec INNER JOIN
+        query = """
+            SELECT 
+                c."modelName" AS modelName,
+                c."numberOfSeats" AS numberOfSeats,
+                c."releaseDate" AS releaseDate,
+                c."defaultPrice" AS defaultPrice,
+                c."nameBrand" AS nameBrand,
+                i."id" AS image_id,
+                i."image" AS image_path
+            FROM 
+                "Car" c
+            INNER JOIN 
+                "Image" i
+            ON 
+                c."modelName" = i."modelNameCar"
+            WHERE 
+                c."nameBrand" = %s
+        """
+        # Exécution de la requête SQL brute
+        with connection.cursor() as cursor:
+            cursor.execute(query, [brand_name])
+            rows = cursor.fetchall()
+
+        # Structuration des résultats
+        cars = {}
+        for row in rows:
+            model_name = row[0]
+            if model_name not in cars:
+                cars[model_name] = {
+                    'modelName': row[0],
+                    'numberOfSeats': row[1],
+                    'releaseDate': row[2],
+                    'defaultPrice': row[3],
+                    'nameBrand': row[4],
+                    'images': []
+                }
+            cars[model_name]['images'].append({'id': row[5], 'image': row[6]})
+
+        # Conversion des résultats en liste
+        cars_list = list(cars.values())
+
+        return Response(cars_list, status=status.HTTP_200_OK)

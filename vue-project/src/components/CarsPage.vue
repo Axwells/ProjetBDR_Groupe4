@@ -1,45 +1,113 @@
 <template>
-    <div class="homepage">
-        <header class="main-header">
-            <div class="user-info">
-                <p>Connecté en tant que : <strong>{{ username }}</strong></p>
-            </div>
-            <h1>Bienvenue sur le Dictionnaire de Voitures</h1>
-        </header>
+  <div class="cars-page">
+    <header class="main-header">
+      <h1>Voitures de la marque : {{ brandName }}</h1>
+    </header>
 
-        <main class="main-content">
-            <section id="cars">
-                <h2>Voitures de la marque {{ brandName }}</h2>
-                <ul>
-                    <li v-for="car in cars" :key="car.modelName" class="car-item">
-                        <strong>{{ car.modelName }}</strong> - {{ car.numberOfSeats }} sièges,
-                        sortie le {{ car.releaseDate }}, prix : {{ car.defaultPrice }} €
-                    </li>
-                </ul>
-            </section>
-        </main>
-    </div>
+    <main v-if="cars.length > 0" class="main-content">
+      <section class="cars-list">
+        <div v-for="car in cars" :key="car.modelName" class="car-item">
+          <h2>{{ car.modelName }}</h2>
+          <p><strong>Nombre de sièges :</strong> {{ car.numberOfSeats }}</p>
+          <p><strong>Date de sortie :</strong> {{ car.releaseDate }}</p>
+          <p><strong>Prix :</strong> {{ car.defaultPrice }} €</p>
+
+          <div class="car-images">
+            <h3>Images :</h3>
+            <div v-if="car.images && car.images.length > 0" class="carousel">
+              <div
+                v-for="image in car.images"
+                :key="image.id"
+                class="carousel-item"
+              >
+                <img :src="`/images/cars/${image.image}`" :alt="`Image de ${car.modelName} - ${image.image}`" style="max-height: 100px;" />
+              </div>
+            </div>
+            <p v-else>Aucune image disponible pour ce modèle.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <p v-else class="no-cars-message">
+      Aucune voiture disponible pour cette marque.
+    </p>
+  </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
-import axios from 'axios';
+import { ref, onMounted } from "vue";
+import { useRoute } from "vue-router";
+import axios from "axios";
 
-const username = "Jean Dupont"; // Remplacez par une donnée dynamique si nécessaire
-const cars = ref([]);
 const route = useRoute();
-const brandName = route.params.brandName; // Récupère le nom de la marque depuis l'URL
+const brandName = ref(route.params.brandName); // Récupère la marque depuis l'URL
+const cars = ref([]);
 
-// Appel à l'API pour récupérer les voitures de la marque
+// Appel API pour récupérer les voitures de la marque
 onMounted(async () => {
-    try {
-        const response = await axios.get(`http://127.0.0.1:8000/app/brands/${brandName}/cars/`);
-        cars.value = response.data;
-    } catch (error) {
-        console.error("Erreur lors de la récupération des voitures :", error);
-    }
+  try {
+    const response = await axios.get(
+      `http://127.0.0.1:8000/app/cars/${brandName.value}/`
+    );
+    cars.value = response.data; // Stocke les données des voitures
+  } catch (error) {
+    console.error("Erreur lors de la récupération des voitures :", error);
+    cars.value = []; // Définit une liste vide en cas d'erreur
+  }
 });
 </script>
 
 <style src="../assets/main.css"></style>
+
+<style scoped>
+.cars-page {
+  font-family: Arial, sans-serif;
+  padding: 20px;
+}
+
+.main-header {
+  text-align: center;
+  background-color: #42b983;
+  color: white;
+  padding: 10px;
+}
+
+.cars-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.car-item {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.car-item img {
+  max-width: 100%;
+  border-radius: 8px;
+}
+
+.carousel {
+  display: flex;
+  overflow-x: auto;
+  gap: 10px;
+}
+
+.carousel-item {
+  flex: 0 0 auto;
+  width: 150px;
+  height: 100px;
+}
+
+.no-cars-message {
+  text-align: center;
+  font-size: 18px;
+  color: red;
+  margin-top: 20px;
+}
+</style>

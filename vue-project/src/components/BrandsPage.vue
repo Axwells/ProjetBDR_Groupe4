@@ -20,7 +20,7 @@
                 <strong>{{ brand.name }}</strong>
                 <img
                     v-if="brand.image"
-                    :src="`src/assets/images/brands/${brand.image}`"
+                    :src="`/images/brands/${brand.image}`"
                     :alt="brand.name"
                     style="max-height: 100px;"
                 />
@@ -52,7 +52,7 @@ onMounted(async () => {
 });
 
 const goToBrandCars = (brandName) => {
-    router.push({ name: 'Cars', params: { brandName } });
+    router.push({ name: 'CarsPage', params: { brandName } });
 };
 </script>
 

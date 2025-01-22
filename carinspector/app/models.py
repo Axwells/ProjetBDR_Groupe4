@@ -60,12 +60,13 @@ class CarOption(models.Model):
         unique_together = (("modelNameCar", "nameOption"),)
 
 class Image(models.Model):
-    modelNameCar = models.ForeignKey(Car, on_delete=models.CASCADE, db_column="modelNameCar")
+    id = models.AutoField(primary_key=True, db_column="id")
     image = models.CharField(max_length=1030, db_column="image")
+    modelNameCar = models.ForeignKey(Car, on_delete=models.CASCADE, db_column="modelNameCar")
 
     class Meta:
         db_table = "Image"
-        unique_together = (("modelNameCar", "image"),)
+        unique_together = (("id", "image", "modelNameCar"),)
 
 
 class AppUserManager(BaseUserManager):

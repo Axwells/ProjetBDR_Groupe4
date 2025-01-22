@@ -11,5 +11,5 @@ urlpatterns = [
     path('register/', RegisterView.as_view(), name='register'),
     path('login/', LoginView.as_view(), name='login'),
     path('logout/', LogoutView.as_view(), name='logout'),
-    path('brands/<str:brand_name>/cars/', CarsByBrandView.as_view(), name='cars_by_brand'),
+    path('cars/<str:brand_name>/', CarsByBrandView.as_view(), name='cars-by-brand'),
 ]

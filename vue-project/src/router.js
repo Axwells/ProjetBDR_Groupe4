@@ -36,10 +36,10 @@ const routes = [
         component: BrandsPage,
     },
     {
-        path: '/brands/:brandName/cars',
-        name: 'Cars',
+        path: '/cars/:brandName',
+        name: 'CarsPage',
         component: CarsPage,
-    },
+      },
 ];
 
 const router = createRouter({
