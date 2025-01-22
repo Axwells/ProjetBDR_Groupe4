@@ -1,13 +1,15 @@
 from django.shortcuts import render
 from django.db import connection
+from django.http import HttpResponse
+from django.contrib.auth import authenticate
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .models import Brand, AppUser, Car, Specification
-from django.http import HttpResponse
-from .serializers import BrandSerializer, RegisterSerializer, LoginSerializer, CarSerializer, SpecificationSerializer
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
-from django.contrib.auth import authenticate
+
+from .models import Brand, AppUser, Car, Specification
+from .serializers import BrandSerializer, RegisterSerializer, LoginSerializer, CarSerializer, SpecificationSerializer
+
 
 # from app.mixins import ModelViewSet #soit on le crée soit ça tej
 
@@ -15,19 +17,6 @@ from django.contrib.auth import authenticate
 
 #résoudre import
 
-
-# class BrandViewSet(ModelViewSet):
-#     serializer_class = None
-#     permission_classes = (None,)
-#     queryset = Brand.objects.all()
-
-#     def get_queryset(self):
-#         queryset = super().get_queryset()
-#         return queryset
-
-# def brands(request):
-#     brands = Brand.objects.all()
-#     return render(request, 'app/brands.html', {'brands': brands})
 
 class BrandListView(APIView):
     def get(self, request):
@@ -89,53 +78,6 @@ class LogoutView(APIView):
             return Response({'message': 'Successfully logged out'}, status=status.HTTP_205_RESET_CONTENT)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-
-class CarsByBrandView(APIView):
-    def get(self, request, brand_name):
-        # Requête SQL brute avec INNER JOIN
-        query = """
-            SELECT 
-                c."modelName" AS modelName,
-                c."numberOfSeats" AS numberOfSeats,
-                c."releaseDate" AS releaseDate,
-                c."defaultPrice" AS defaultPrice,
-                c."nameBrand" AS nameBrand,
-                i."id" AS image_id,
-                i."image" AS image_path
-            FROM 
-                "Car" c
-            INNER JOIN 
-                "Image" i
-            ON 
-                c."modelName" = i."modelNameCar"
-            WHERE 
-                c."nameBrand" = %s
-        """
-        # Exécution de la requête SQL brute
-        with connection.cursor() as cursor:
-            cursor.execute(query, [brand_name])
-            rows = cursor.fetchall()
-
-        # Structuration des résultats
-        cars = {}
-        for row in rows:
-            model_name = row[0]
-            if model_name not in cars:
-                cars[model_name] = {
-                    'modelName': row[0],
-                    'numberOfSeats': row[1],
-                    'releaseDate': row[2],
-                    'defaultPrice': row[3],
-                    'nameBrand': row[4],
-                    'images': []
-                }
-            cars[model_name]['images'].append({'id': row[5], 'image': row[6]})
-
-        # Conversion des résultats en liste
-        cars_list = list(cars.values())
-
-        return Response(cars_list, status=status.HTTP_200_OK)
 
 
 class SpecificationsByCarView(APIView):

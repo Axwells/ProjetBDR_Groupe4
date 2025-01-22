@@ -32,10 +32,12 @@ class LoginSerializer(serializers.Serializer):
             raise serializers.ValidationError('Invalid email or password')
         return user
 
+
 class ImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Image
         fields = ['id', 'image', 'modelNameCar']
+
 
 class CarSerializer(serializers.ModelSerializer):
     images = ImageSerializer(many=True, read_only=True)
@@ -51,18 +53,6 @@ class BrakeSerializer(serializers.ModelSerializer):
         fields = ['id', 'model', 'abs', 'price']
 
 
-class EngineSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Engine
-        fields = ['modelName', 'horsePower', 'position', 'price', 'nameBrand']
-
-
-class SpecificationEngineSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = SpecificationEngine
-        fields = ['idSpecification', 'modelNameEngine']
-
-
 class TransmissionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transmission
@@ -73,18 +63,6 @@ class PerformanceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Performance
         fields = ['id', 'maxSpeed', 'zeroToHundredTime']
-
-
-class CategorySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Category
-        fields = ['name']
-
-
-class CategorySpecificationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CategorySpecification
-        fields = ['nameCategory', 'idSpecification']
 
 
 class SpecificationSerializer(serializers.ModelSerializer):
