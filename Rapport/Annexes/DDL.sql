@@ -1,205 +1,206 @@
-drop table if exists Brand cascade;
-create table Brand(
-	name VARCHAR(50),
-	image VARCHAR(1030),
-	constraint PK_Brand primary key(name)
+DROP TABLE IF EXISTS "Brand" CASCADE;
+CREATE TABLE "Brand"(
+	"name" VARCHAR(50),
+	"image" VARCHAR(1030),
+	CONSTRAINT "PK_Brand" PRIMARY KEY("name")
 );
 
-drop table if exists Car cascade;
-create table Car(
-	modelName VARCHAR(80),
-	numberOfSeats INT not NULL,
-	releaseDate DATE not NULL,
-	defaultPrice DECIMAL(12,2) not NULL,
-	nameBrand VARCHAR(50) not null,
-	constraint PK_Car primary key(modelName),
-	constraint FK_Car_nameBrand foreign key (nameBrand) references Brand(name) on update cascade on delete restrict,
-	constraint CK_Car_numberOfSeats check (numberOfSeats >= 1),
-	constraint CK_Car_releaseDate check (releaseDate <= CURRENT_DATE),
-	constraint CK_Car_defaultPrice check (defaultPrice > 0)
+DROP TABLE IF EXISTS "Car" CASCADE;
+CREATE TABLE "Car"(
+	"modelName" VARCHAR(80),
+	"numberOfSeats" INT NOT NULL,
+	"releaseDate" DATE NOT NULL,
+	"defaultPrice" DECIMAL(12,2) NOT NULL,
+	"nameBrand" VARCHAR(50) NOT NULL,
+	CONSTRAINT "PK_Car" PRIMARY KEY("modelName"),
+	CONSTRAINT "FK_Car_nameBrand" FOREIGN KEY ("nameBrand") REFERENCES "Brand"("name") ON UPDATE CASCADE ON DELETE RESTRICT,
+	CONSTRAINT "CK_Car_numberOfSeats" CHECK ("numberOfSeats" >= 1),
+	CONSTRAINT "CK_Car_releaseDate" CHECK ("releaseDate" <= CURRENT_DATE),
+	CONSTRAINT "CK_Car_defaultPrice" CHECK ("defaultPrice" > 0)
 );
 
-drop table if exists option cascade;
-create table Option(
-	name VARCHAR(100),
-	constraint PK_Option primary key(name)
+DROP TABLE IF EXISTS "Option" CASCADE;
+CREATE TABLE "Option"(
+	"name" VARCHAR(100),
+	CONSTRAINT "PK_Option" PRIMARY KEY("name")
 );
 
-drop table if exists Car_Option;
-create table Car_Option(
-	modelNameCar VARCHAR(80),
-	nameOption VARCHAR(100),
-	optionPrice DECIMAL(7,2) not NULL,
-	constraint PK_Car_Option primary key(modelNameCar, nameOption),
-	constraint FK_Car_Option_nameOption foreign key (nameOption) references Option(name) on update cascade on delete cascade,
-	constraint FK_Car_modelNameCar foreign key (modelNameCar) references Car(modelName) on update cascade on delete cascade,
-	constraint CK_Car_Option_optionPrice check (optionPrice >= 0)
+DROP TABLE IF EXISTS "Car_Option";
+CREATE TABLE "Car_Option"(
+	"modelNameCar" VARCHAR(80),
+	"nameOption" VARCHAR(100),
+	"optionPrice" DECIMAL(7,2) NOT NULL,
+	CONSTRAINT "PK_Car_Option" PRIMARY KEY("modelNameCar", "nameOption"),
+	CONSTRAINT "FK_Car_Option_nameOption" FOREIGN KEY ("nameOption") REFERENCES "Option"("name") ON UPDATE CASCADE ON DELETE CASCADE,
+	CONSTRAINT "FK_Car_modelNameCar" FOREIGN KEY ("modelNameCar") REFERENCES "Car"("modelName") ON UPDATE CASCADE ON DELETE CASCADE,
+	CONSTRAINT "CK_Car_Option_optionPrice" CHECK ("optionPrice" >= 0)
 );
 
-drop table if exists Image;
-create table Image(
-	modelNameCar VARCHAR(80),
-	image VARCHAR(1030),
-	constraint PK_Image primary key(modelNameCar, image),
-	constraint FK_Image_modelNameCar foreign key (modelNameCar) references Car(modelName) on update cascade on delete cascade
+DROP TABLE IF EXISTS "Image";
+CREATE TABLE "Image"(
+	"modelNameCar" VARCHAR(80),
+	"image" VARCHAR(1030),
+	CONSTRAINT "PK_Image" PRIMARY KEY("modelNameCar", "image"),
+	CONSTRAINT "FK_Image_modelNameCar" FOREIGN KEY ("modelNameCar") REFERENCES "Car"("modelName") ON UPDATE CASCADE ON DELETE CASCADE
 );
 
-drop table if exists AppUser cascade;
-create table AppUser(
-	email VARCHAR(320),
-	username VARCHAR(80) not null,
-	password VARCHAR(128) not null,
-	isSuperUser BOOL not null default false,
-	constraint PK_User primary key(email)
+DROP TABLE IF EXISTS "AppUser" CASCADE;
+CREATE TABLE "AppUser"(
+	"email" VARCHAR(320),
+	"username" VARCHAR(80) NOT NULL,
+	"password" VARCHAR(128) NOT NULL,
+	"isSuperUser" BOOLEAN NOT NULL DEFAULT FALSE,
+	"last_login" VARCHAR(10) DEFAULT NULL,
+	CONSTRAINT "PK_User" PRIMARY KEY("email")
 );
 
-drop table if exists Modification;
-create table Modification(
-	id SERIAL,
-	text VARCHAR(500) not null,
-	isAccepted BOOL,
-	modelNameCar VARCHAR(80) not NULL,
-	emailUserSuggests VARCHAR(320) not NULL,
-	emailUserManages VARCHAR(320),
-	constraint PK_Modification primary key (id),
-	constraint FK_Modification_modelNameCar foreign key (modelNameCar) references Car(modelName) on update cascade on delete cascade,
-	constraint FK_Modification_emailUserSuggests foreign key (emailUserSuggests) references AppUser(email) on update cascade on delete restrict,
-	constraint FK_Modification_emailUserManages foreign key (emailUserManages) references AppUser(email) on update cascade on delete restrict
+DROP TABLE IF EXISTS "Modification";
+CREATE TABLE "Modification"(
+	"id" SERIAL,
+	"text" VARCHAR(500) NOT NULL,
+	"isAccepted" BOOLEAN,
+	"modelNameCar" VARCHAR(80) NOT NULL,
+	"emailUserSuggests" VARCHAR(320),
+	"emailUserManages" VARCHAR(320),
+	CONSTRAINT "PK_Modification" PRIMARY KEY ("id"),
+	CONSTRAINT "FK_Modification_modelNameCar" FOREIGN KEY ("modelNameCar") REFERENCES "Car"("modelName") ON UPDATE CASCADE ON DELETE CASCADE,
+	CONSTRAINT "FK_Modification_emailUserSuggests" FOREIGN KEY ("emailUserSuggests") REFERENCES "AppUser"("email") ON UPDATE CASCADE ON DELETE SET NULL,
+	CONSTRAINT "FK_Modification_emailUserManages" FOREIGN KEY ("emailUserManages") REFERENCES "AppUser"("email") ON UPDATE CASCADE ON DELETE SET NULL
 );
 
-drop table if exists Category cascade;
-create table Category(
-	name VARCHAR(80),
-	constraint PK_Category primary key (name)
+DROP TABLE IF EXISTS "Category" CASCADE;
+CREATE TABLE "Category"(
+	"name" VARCHAR(80),
+	CONSTRAINT "PK_Category" PRIMARY KEY ("name")
 );
 
-drop table if exists User_Category;
-create table User_Category(
-	emailUser VARCHAR(320),
-	nameCategory VARCHAR(80),
-	constraint PK_User_Category primary key (emailUser, nameCategory),
-	constraint FK_User_Category_emailUser foreign key (emailUser) references AppUser(email) on update cascade on delete cascade,
-	constraint FK_User_Category_nameCategory foreign key (nameCategory) references Category(name) on update cascade on delete cascade
+DROP TABLE IF EXISTS "User_Category";
+CREATE TABLE "User_Category"(
+	"emailUser" VARCHAR(320),
+	"nameCategory" VARCHAR(80),
+	CONSTRAINT "PK_User_Category" PRIMARY KEY ("emailUser", "nameCategory"),
+	CONSTRAINT "FK_User_Category_emailUser" FOREIGN KEY ("emailUser") REFERENCES "AppUser"("email") ON UPDATE CASCADE ON DELETE CASCADE,
+	CONSTRAINT "FK_User_Category_nameCategory" FOREIGN KEY ("nameCategory") REFERENCES "Category"("name") ON UPDATE CASCADE ON DELETE CASCADE
 );
 
-DROP TABLE IF EXISTS Performance cascade;
-CREATE TABLE Performance(
-    id SERIAL,
-    maxSpeed INT not null,
-    zeroToHundredTime DECIMAL(4,2) not null,
-    CONSTRAINT PK_Performance PRIMARY KEY (id),
-    constraint CK_Performance_maxSpeed check (maxSpeed > 0 and maxSpeed <= 600),
-    constraint CK_Performance_zeroToHundredTime check (zeroToHundredTime > 0)
+DROP TABLE IF EXISTS "Performance" CASCADE;
+CREATE TABLE "Performance"(
+	"id" SERIAL,
+	"maxSpeed" INT NOT NULL,
+	"zeroToHundredTime" DECIMAL(4,2) NOT NULL,
+	CONSTRAINT "PK_Performance" PRIMARY KEY ("id"),
+	CONSTRAINT "CK_Performance_maxSpeed" CHECK ("maxSpeed" > 0 AND "maxSpeed" <= 600),
+	CONSTRAINT "CK_Performance_zeroToHundredTime" CHECK ("zeroToHundredTime" > 0)
 );
 
-drop type if exists POSITION_ENUM CASCADE;
-create type POSITION_ENUM as enum('front', 'middle', 'rear', 'underfloor');
+DROP TYPE IF EXISTS "POSITION_ENUM" CASCADE;
+CREATE TYPE "POSITION_ENUM" AS ENUM('front', 'middle', 'rear', 'underfloor');
 
-DROP TABLE IF EXISTS Engine cascade;
-CREATE TABLE Engine(
-    modelName VARCHAR(80),
-    horsePower INT not null,
-    position POSITION_ENUM not null,
-    price DECIMAL(9,2) not null,
-    nameBrand VARCHAR(50) NOT NULL,
-    CONSTRAINT PK_Engine PRIMARY KEY (modelName),
-    CONSTRAINT FK_Engine_nameBrand FOREIGN KEY (nameBrand) REFERENCES Brand(name) on update cascade on delete restrict,
-    constraint CK_Engine_horsePower check(horsePower > 0 and horsepower < 3000),
-    constraint CK_Engine_price check(price > 0)
-);
- 
-DROP TABLE IF EXISTS Gas;
-CREATE TABLE Gas(
-    modelNameEngine VARCHAR(80),
-    numberOfCylinders INT not null,
-    engineDisplacement DECIMAL(3,1) not null,
-    CONSTRAINT PK_Gas PRIMARY KEY (modelNameEngine),
-    CONSTRAINT FK_Gas_modelNameEngine FOREIGN KEY (modelNameEngine) REFERENCES Engine(modelName) on update cascade on delete cascade,
-	constraint CK_Gas_numberOfCylinders check(numberOfCylinders >= 0 and numberOfCylinders <= 18)
-);
- 
-DROP TABLE IF EXISTS Electric;
-CREATE TABLE Electric(
-    modelNameEngine VARCHAR(80),
-    maxPower INT not null,
-    batteryDistanceCapacity INT not null,
-    CONSTRAINT PK_Electric PRIMARY KEY (modelNameEngine),
-    CONSTRAINT FK_Electric_modelNameEngine FOREIGN KEY (modelNameEngine) REFERENCES Engine(modelName) on update cascade on delete cascade,
-    constraint CK_Electric_maxPower check(maxPower > 0),
-    constraint CK_Electric_batteryDistanceCapacity check(batteryDistanceCapacity > 0)    
+DROP TABLE IF EXISTS "Engine" CASCADE;
+CREATE TABLE "Engine"(
+	"modelName" VARCHAR(80),
+	"horsePower" INT NOT NULL,
+	"position" "POSITION_ENUM" NOT NULL,
+	"price" DECIMAL(9,2) NOT NULL,
+	"nameBrand" VARCHAR(50) NOT NULL,
+	CONSTRAINT "PK_Engine" PRIMARY KEY ("modelName"),
+	CONSTRAINT "FK_Engine_nameBrand" FOREIGN KEY ("nameBrand") REFERENCES "Brand"("name") ON UPDATE CASCADE ON DELETE RESTRICT,
+	CONSTRAINT "CK_Engine_horsePower" CHECK("horsePower" > 0 AND "horsePower" < 3000),
+	CONSTRAINT "CK_Engine_price" CHECK("price" > 0)
 );
 
-drop type if exists TRANSMISSION_TYPE_ENUM CASCADE;
-drop type if exists DRIVETRAIN_ENUM CASCADE;
-CREATE TYPE TRANSMISSION_TYPE_ENUM AS ENUM('automatic', 'manual');
-CREATE TYPE DRIVETRAIN_ENUM AS ENUM('rwd', 'fwd', 'awd', '4wd');
+DROP TABLE IF EXISTS "Gas";
+CREATE TABLE "Gas"(
+	"modelNameEngine" VARCHAR(80),
+	"numberOfCylinders" INT NOT NULL,
+	"engineDisplacement" DECIMAL(3,1) NOT NULL,
+	CONSTRAINT "PK_Gas" PRIMARY KEY ("modelNameEngine"),
+	CONSTRAINT "FK_Gas_modelNameEngine" FOREIGN KEY ("modelNameEngine") REFERENCES "Engine"("modelName") ON UPDATE CASCADE ON DELETE CASCADE,
+	CONSTRAINT "CK_Gas_numberOfCylinders" CHECK("numberOfCylinders" >= 0 AND "numberOfCylinders" <= 18)
+);
 
-DROP TABLE IF EXISTS Transmission cascade;
-CREATE TABLE Transmission(
-    id SERIAL,
-    type TRANSMISSION_TYPE_ENUM not null,
-    numberOfGears INT not null,
-    drivetrain DRIVETRAIN_ENUM not null,
-    price DECIMAL(8,2) not null,
-    CONSTRAINT PK_Transmission PRIMARY KEY (id),
-    constraint CK_Transmission_numberOfGears check(numberOfGears > 0 and numberOfGears <= 10),
-    constraint CK_Transmission_price check(price > 0)
+DROP TABLE IF EXISTS "Electric";
+CREATE TABLE "Electric"(
+	"modelNameEngine" VARCHAR(80),
+	"maxPower" INT NOT NULL,
+	"batteryDistanceCapacity" INT NOT NULL,
+	CONSTRAINT "PK_Electric" PRIMARY KEY ("modelNameEngine"),
+	CONSTRAINT "FK_Electric_modelNameEngine" FOREIGN KEY ("modelNameEngine") REFERENCES "Engine"("modelName") ON UPDATE CASCADE ON DELETE CASCADE,
+	CONSTRAINT "CK_Electric_maxPower" CHECK("maxPower" > 0),
+	CONSTRAINT "CK_Electric_batteryDistanceCapacity" CHECK("batteryDistanceCapacity" > 0)    
 );
- 
-DROP TABLE IF EXISTS Brake cascade;
-CREATE TABLE Brake(
-    id SERIAL,
-    model VARCHAR(80) not null,
-    abs BOOL not null,
-    price DECIMAL(7,2) not null,
-    CONSTRAINT PK_Brake PRIMARY KEY (id),
-    constraint CK_Brake_price check(price > 0)
+
+DROP TYPE IF EXISTS "TRANSMISSION_TYPE_ENUM" CASCADE;
+DROP TYPE IF EXISTS "DRIVETRAIN_ENUM" CASCADE;
+CREATE TYPE "TRANSMISSION_TYPE_ENUM" AS ENUM('automatic', 'manual');
+CREATE TYPE "DRIVETRAIN_ENUM" AS ENUM('rwd', 'fwd', 'awd', '4wd');
+
+DROP TABLE IF EXISTS "Transmission" CASCADE;
+CREATE TABLE "Transmission"(
+	"id" SERIAL,
+	"type" "TRANSMISSION_TYPE_ENUM" NOT NULL,
+	"numberOfGears" INT NOT NULL,
+	"drivetrain" "DRIVETRAIN_ENUM" NOT NULL,
+	"price" DECIMAL(8,2) NOT NULL,
+	CONSTRAINT "PK_Transmission" PRIMARY KEY ("id"),
+	CONSTRAINT "CK_Transmission_numberOfGears" CHECK("numberOfGears" > 0 AND "numberOfGears" <= 10),
+	CONSTRAINT "CK_Transmission_price" CHECK("price" > 0)
 );
- 
-DROP TABLE IF EXISTS Specification cascade;
-CREATE TABLE Specification(
-    id SERIAL,
-    modelNameCar VARCHAR(80) NOT NULL,
-    idBrake INT NOT NULL,
-    idTransmission INT NOT NULL,
-    idPerformance INT NOT NULL,
-    CONSTRAINT PK_Specification PRIMARY KEY (id),
-    CONSTRAINT FK_Specification_modelNameCar FOREIGN KEY (modelNameCar) REFERENCES Car(modelName) on update cascade on delete cascade,
-    CONSTRAINT FK_Specification_idBrake FOREIGN KEY (idBrake) REFERENCES Brake(id) on update cascade on delete restrict,
-    CONSTRAINT FK_Specification_idTransmission FOREIGN KEY (idTransmission) REFERENCES Transmission(id) on update cascade on delete restrict,
-    CONSTRAINT FK_Specification_idPerformance FOREIGN KEY (idPerformance) REFERENCES Performance(id) on update cascade on delete restrict
+
+DROP TABLE IF EXISTS "Brake" CASCADE;
+CREATE TABLE "Brake"(
+	"id" SERIAL,
+	"model" VARCHAR(80) NOT NULL,
+	"abs" BOOLEAN NOT NULL,
+	"price" DECIMAL(7,2) NOT NULL,
+	CONSTRAINT "PK_Brake" PRIMARY KEY ("id"),
+	CONSTRAINT "CK_Brake_price" CHECK("price" > 0)
 );
- 
-DROP TABLE IF EXISTS Specification_Engine;
-CREATE TABLE Specification_Engine(
-    idSpecification INT,
-    modelNameEngine VARCHAR(80),
-    CONSTRAINT PK_Specification_Engine PRIMARY KEY (idSpecification, modelNameEngine),
-    CONSTRAINT FK_Specification_Engine_idSpecification FOREIGN KEY (idSpecification) REFERENCES Specification(id) on update cascade on delete cascade,
-    CONSTRAINT FK_Specification_Engine_modelNameEngine FOREIGN KEY (modelNameEngine) REFERENCES Engine(modelName) on update cascade on delete restrict
+
+DROP TABLE IF EXISTS "Specification" CASCADE;
+CREATE TABLE "Specification"(
+	"id" SERIAL,
+	"modelNameCar" VARCHAR(80) NOT NULL,
+	"idBrake" INT NOT NULL,
+	"idTransmission" INT NOT NULL,
+	"idPerformance" INT NOT NULL,
+	CONSTRAINT "PK_Specification" PRIMARY KEY ("id"),
+	CONSTRAINT "FK_Specification_modelNameCar" FOREIGN KEY ("modelNameCar") REFERENCES "Car"("modelName") ON UPDATE CASCADE ON DELETE CASCADE,
+	CONSTRAINT "FK_Specification_idBrake" FOREIGN KEY ("idBrake") REFERENCES "Brake"("id") ON UPDATE CASCADE ON DELETE RESTRICT,
+	CONSTRAINT "FK_Specification_idTransmission" FOREIGN KEY ("idTransmission") REFERENCES "Transmission"("id") ON UPDATE CASCADE ON DELETE RESTRICT,
+	CONSTRAINT "FK_Specification_idPerformance" FOREIGN KEY ("idPerformance") REFERENCES "Performance"("id") ON UPDATE CASCADE ON DELETE RESTRICT
 );
- 
-DROP TABLE IF EXISTS Review;
-CREATE TABLE Review(
-    id SERIAL,
-    title VARCHAR(30) not null,
-    content VARCHAR (1000),
-    grade INT not null,
-    date DATE not null,
-    idSpecification INT NOT NULL,
-    emailUser VARCHAR(320) NOT NULL,
-    CONSTRAINT PK_Review PRIMARY KEY (id),
-    CONSTRAINT FK_Review_idSpecification FOREIGN KEY (idSpecification) REFERENCES Specification(id) on update cascade on delete cascade,
-    CONSTRAINT FK_Review_emailUser FOREIGN KEY (emailUser) REFERENCES AppUser(email) on update cascade on delete restrict,
-    constraint CK_Review_grade check(grade > 0 and grade <= 5),
-    constraint CK_Review_date check(date <= CURRENT_DATE)
+
+DROP TABLE IF EXISTS "Specification_Engine";
+CREATE TABLE "Specification_Engine"(
+	"idSpecification" SERIAL,
+	"modelNameEngine" VARCHAR(80) NOT NULL,
+	CONSTRAINT "PK_Specification_Engine" PRIMARY KEY ("idSpecification", "modelNameEngine"),
+	CONSTRAINT "FK_Specification_Engine_idSpecification" FOREIGN KEY ("idSpecification") REFERENCES "Specification"("id") ON UPDATE CASCADE ON DELETE CASCADE,
+	CONSTRAINT "FK_Specification_Engine_modelNameEngine" FOREIGN KEY ("modelNameEngine") REFERENCES "Engine"("modelName") ON UPDATE CASCADE ON DELETE RESTRICT
 );
- 
-DROP TABLE IF EXISTS Category_Specification;
-CREATE TABLE Category_Specification(
-    nameCategory VARCHAR(80),
-    idSpecification INT,
-    CONSTRAINT PK_Category_Specification PRIMARY KEY (idSpecification, nameCategory),
-    CONSTRAINT FK_Category_Specification_nameCategory FOREIGN KEY (nameCategory) REFERENCES Category(name) on update cascade on delete restrict,
-    CONSTRAINT FK_Category_Specification_idSpecification FOREIGN KEY (idSpecification) REFERENCES Specification(id) on update cascade on delete cascade
+
+DROP TABLE IF EXISTS "Review";
+CREATE TABLE "Review"(
+	"id" SERIAL,
+	"title" VARCHAR(30) NOT NULL,
+	"content" VARCHAR (1000),
+	"grade" INT NOT NULL,
+	"date" DATE NOT NULL,
+	"idSpecification" INT NOT NULL,
+	"emailUser" VARCHAR(320) NOT NULL,
+	CONSTRAINT "PK_Review" PRIMARY KEY ("id"),
+	CONSTRAINT "FK_Review_idSpecification" FOREIGN KEY ("idSpecification") REFERENCES "Specification"("id") ON UPDATE CASCADE ON DELETE CASCADE,
+	CONSTRAINT "FK_Review_emailUser" FOREIGN KEY ("emailUser") REFERENCES "AppUser"("email") ON UPDATE CASCADE ON DELETE SET NULL,
+	CONSTRAINT "CK_Review_grade" CHECK("grade" > 0 AND "grade" <= 5),
+	CONSTRAINT "CK_Review_date" CHECK("date" <= CURRENT_DATE)
+);
+
+DROP TABLE IF EXISTS "Category_Specification";
+CREATE TABLE "Category_Specification"(
+	"nameCategory" VARCHAR(80),
+	"idSpecification" INT,
+	CONSTRAINT "PK_Category_Specification" PRIMARY KEY ("idSpecification", "nameCategory"),
+	CONSTRAINT "FK_Category_Specification_nameCategory" FOREIGN KEY ("nameCategory") REFERENCES "Category"("name") ON UPDATE CASCADE ON DELETE CASCADE,
+	CONSTRAINT "FK_Category_Specification_idSpecification" FOREIGN KEY ("idSpecification") REFERENCES "Specification"("id") ON UPDATE CASCADE ON DELETE CASCADE
 );
