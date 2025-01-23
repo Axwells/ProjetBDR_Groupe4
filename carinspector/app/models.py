@@ -1,4 +1,3 @@
-# from datetime import timezone
 from django.utils import timezone
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -11,6 +10,7 @@ class Brand(models.Model):
 
     class Meta:
         db_table = "Brand"
+
 
 class Car(models.Model):
     modelName = models.CharField(max_length=80, primary_key=True, db_column="modelName")
@@ -41,11 +41,13 @@ class Car(models.Model):
             )
         ]
 
+
 class Option(models.Model):
     name = models.CharField(max_length=100, primary_key=True, db_column="name")
 
     class Meta:
         db_table = "Option"
+
 
 class CarOption(models.Model):
     modelNameCar = models.ForeignKey(Car, on_delete=models.CASCADE, db_column="modelNameCar")
@@ -58,6 +60,7 @@ class CarOption(models.Model):
             CheckConstraint(check=Q(optionPrice__gte=0), name="CK_Car_Option_optionPrice")
         ]
         unique_together = (("modelNameCar", "nameOption"),)
+
 
 class Image(models.Model):
     id = models.AutoField(primary_key=True, db_column="id")
@@ -78,12 +81,12 @@ class AppUserManager(BaseUserManager):
 
         email = self.normalize_email(email)
         user = self.model(email=email, username=username, **extra_fields)
-        user.set_password(password)  # Hash password
+        user.set_password(password)
         user.save(using=self._db)
         return user
 
+    # je sais pas si c'est utile ou pas
     def create_superuser(self, email, username, password=None, **extra_fields):
-        # Superuser creation can still be handled, but no "is_superuser" field
         return self.create_user(email, username, password, **extra_fields)
 
 
@@ -91,6 +94,8 @@ class AppUser(AbstractBaseUser):
     email = models.EmailField(primary_key=True, max_length=320, db_column="email")
     username = models.CharField(max_length=80, db_column="username")
     password = models.CharField(max_length=128, db_column="password")
+    isSuperUser = models.BooleanField(default=False, db_column="isSuperUser")
+    last_login = models.CharField(max_length=10, db_column="last_login", null=True, blank=True, default=None) # Il me semble est nécessaire pour le systeme de login de django
 
     objects = AppUserManager()
 
@@ -104,14 +109,29 @@ class AppUser(AbstractBaseUser):
         return self.email
 
 
-
 class Modification(models.Model):
     id = models.AutoField(primary_key=True, db_column="id")
     text = models.CharField(max_length=500, db_column="text")
     isAccepted = models.BooleanField(null=True, db_column="isAccepted")
-    modelNameCar = models.ForeignKey(Car, on_delete=models.CASCADE, db_column="modelNameCar")
-    emailUserSuggests = models.ForeignKey(AppUser, on_delete=models.RESTRICT, db_column="emailUserSuggests", related_name="suggestedModifications")
-    emailUserManages = models.ForeignKey(AppUser, on_delete=models.RESTRICT, db_column="emailUserManages", related_name="managedModifications", null=True)
+    modelNameCar = models.ForeignKey(
+        Car, on_delete=models.CASCADE, db_column="modelNameCar"
+    )
+    emailUserSuggests = models.ForeignKey(
+        AppUser,
+        on_delete=models.SET_NULL,
+        db_column="emailUserSuggests",
+        related_name="suggestedModifications",
+        null=True,
+        blank=True,
+    )
+    emailUserManages = models.ForeignKey(
+        AppUser,
+        on_delete=models.SET_NULL,
+        db_column="emailUserManages",
+        related_name="managedModifications",
+        null=True,
+        blank=True,
+    )
 
     class Meta:
         db_table = "Modification"
@@ -145,11 +165,13 @@ class Performance(models.Model):
             CheckConstraint(check=Q(zeroToHundredTime__gt=0), name="CK_Performance_zeroToHundredTime"),
         ]
 
+
 class PositionEnum(models.TextChoices):
     FRONT = "front", "Front"
     MIDDLE = "middle", "Middle"
     REAR = "rear", "Rear"
     UNDERFLOOR = "underfloor", "Underfloor"
+
 
 class Engine(models.Model):
     modelName = models.CharField(max_length=80, primary_key=True, db_column="modelName")
@@ -177,6 +199,7 @@ class Gas(models.Model):
             CheckConstraint(check=Q(numberOfCylinders__gte=0) & Q(numberOfCylinders__lte=18), name="CK_Gas_numberOfCylinders")
         ]
 
+
 class Electric(models.Model):
     modelNameEngine = models.OneToOneField(Engine, on_delete=models.CASCADE, primary_key=True, db_column="modelNameEngine")
     maxPower = models.PositiveIntegerField(db_column="maxPower")
@@ -189,15 +212,18 @@ class Electric(models.Model):
             CheckConstraint(check=Q(batteryDistanceCapacity__gt=0), name="CK_Electric_batteryDistanceCapacity"),
         ]
 
+
 class TransmissionTypeEnum(models.TextChoices):
     AUTOMATIC = "automatic", "Automatic"
     MANUAL = "manual", "Manual"
+
 
 class DrivetrainEnum(models.TextChoices):
     RWD = "rwd", "RWD"
     FWD = "fwd", "FWD"
     AWD = "awd", "AWD"
     FOURWD = "4wd", "4WD"
+
 
 class Transmission(models.Model):
     id = models.AutoField(primary_key=True, db_column="id")
@@ -212,6 +238,7 @@ class Transmission(models.Model):
             CheckConstraint(check=Q(numberOfGears__gt=0) & Q(numberOfGears__lte=10), name="CK_Transmission_numberOfGears"),
             CheckConstraint(check=Q(price__gt=0), name="CK_Transmission_price"),
         ]
+
 
 class Specification(models.Model):
     id = models.AutoField(primary_key=True, db_column="id")
@@ -236,6 +263,7 @@ class Brake(models.Model):
             CheckConstraint(check=Q(price__gt=0), name="CK_Brake_price"),
         ]
 
+
 class SpecificationEngine(models.Model):
     idSpecification = models.ForeignKey("Specification", on_delete=models.CASCADE, db_column="idSpecification")
     modelNameEngine = models.ForeignKey("Engine", on_delete=models.RESTRICT, db_column="modelNameEngine")
@@ -252,7 +280,7 @@ class Review(models.Model):
     grade = models.PositiveIntegerField(db_column="grade")
     date = models.DateField(db_column="date")
     idSpecification = models.ForeignKey("Specification", on_delete=models.CASCADE, db_column="idSpecification")
-    emailUser = models.ForeignKey("AppUser", on_delete=models.RESTRICT, db_column="emailUser")
+    emailUser = models.ForeignKey("AppUser", on_delete=models.SET_NULL, db_column="emailUser", null=True, blank=True)
 
     class Meta:
         db_table = "Review"

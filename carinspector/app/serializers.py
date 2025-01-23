@@ -13,7 +13,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AppUser
-        fields = ['email', 'username', 'password']
+        fields = ['email', 'username', 'password', 'isSuperUser']
 
     def create(self, validated_data):
         return AppUser.objects.create_user(**validated_data)
@@ -81,7 +81,17 @@ class ReviewSerializer(serializers.ModelSerializer):
         fields = ['title', 'content', 'grade', 'idSpecification', 'emailUser']
 
 
+class AppUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AppUser
+        fields = ["username", "email"]
+
+
 class ModificationSerializer(serializers.ModelSerializer):
+    modelNameCar = CarSerializer()
+    emailUserSuggests = AppUserSerializer(required=False)
+    emailUserManages = AppUserSerializer(required=False)
+
     class Meta:
         model = Modification
         fields = ['id', 'text', 'isAccepted', 'modelNameCar', 'emailUserSuggests', 'emailUserManages']

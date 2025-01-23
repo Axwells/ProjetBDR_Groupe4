@@ -7,8 +7,9 @@ import HomePage from './components/HomePage.vue'
 import SearchPage from './components/SearchPage.vue'
 import BrandsPage from './components/BrandsPage.vue'
 import CarsPage from './components/CarsPage.vue'
-import SpecsPage from './components/SpecsPage.vue';
-
+import SpecsPage from './components/SpecsPage.vue'
+import AdminModificationsPage from './components/AdminModifications.vue'
+import AdminUsersPage from './components/AdminUsersPage.vue';
 
 const routes = [
     {
@@ -46,6 +47,16 @@ const routes = [
         name: "CarsPage",
         component: CarsPage,
     },
+    {
+        path: '/admin/modifications',
+        name: 'AdminModifications',
+        component: AdminModificationsPage,
+      },
+      {
+        path: '/admin/users',
+        name: 'AdminUsers',
+        component: AdminUsersPage,
+      },
 ];
 
 const router = createRouter({
@@ -53,4 +64,8 @@ const router = createRouter({
     routes
 })
 
+
+
 export default router
+
+

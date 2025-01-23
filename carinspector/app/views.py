@@ -1,22 +1,18 @@
 from django.shortcuts import render
 from django.db import connection
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.contrib.auth import authenticate
+from django.contrib.auth.hashers import make_password, check_password
+from django.contrib.auth.decorators import login_required
 from django.utils.timezone import now
+from django.utils.decorators import method_decorator
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import Brand, AppUser, Car, Specification, Review, Modification
-from .serializers import BrandSerializer, RegisterSerializer, LoginSerializer, CarSerializer, SpecificationSerializer, ReviewSerializer, ModificationSerializer
-
-
-# from app.mixins import ModelViewSet #soit on le crée soit ça tej
-
-# from rest_framework import mixins
-
-#résoudre import
+from .serializers import BrandSerializer, RegisterSerializer, LoginSerializer, CarSerializer, SpecificationSerializer, ReviewSerializer, ModificationSerializer, AppUserSerializer
 
 
 class BrandListView(APIView):
@@ -34,18 +30,31 @@ class RegisterView(APIView):
         username = request.data.get('username')
         password = request.data.get('password')
 
-        # Vérifiez si l'email ou le nom d'utilisateur existent déjà
-        if AppUser.objects.filter(email=email).exists():
-            return Response({"detail": "Cet email est déjà utilisé."}, status=status.HTTP_400_BAD_REQUEST)
-        if AppUser.objects.filter(username=username).exists():
-            return Response({"detail": "Ce nom d'utilisateur est déjà pris."}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            with connection.cursor() as cursor:
+                # Vérifier si l'email existe déjà
+                cursor.execute('SELECT COUNT(*) FROM "AppUser" WHERE "email" = %s', [email])
+                if cursor.fetchone()[0] > 0:
+                    return Response({"detail": "Cet email est déjà utilisé."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Créer un nouvel utilisateur
-        user = AppUser.objects.create_user(email=email, username=username, password=password)
-        user.save()
+                # Vérifier si le username existe déjà
+                cursor.execute('SELECT COUNT(*) FROM "AppUser" WHERE "username" = %s', [username])
+                if cursor.fetchone()[0] > 0:
+                    return Response({"detail": "Ce nom d'utilisateur est déjà pris."}, status=status.HTTP_400_BAD_REQUEST)
 
-        return Response({"message": "Utilisateur créé avec succès."}, status=status.HTTP_201_CREATED)
+                hashed_password = make_password(password)
 
+                cursor.execute(
+                    '''
+                    INSERT INTO "AppUser" ("email", "username", "password", "isSuperUser")
+                    VALUES (%s, %s, %s, %s)
+                    ''',
+                    [email, username, hashed_password, False]
+                )
+
+            return Response({"message": "Utilisateur créé avec succès."}, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class LoginView(APIView):
@@ -53,22 +62,34 @@ class LoginView(APIView):
         email = request.data.get('email')
         password = request.data.get('password')
 
-        # Debugging
-        print(f"Email: {email}, Password: {password}")
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    'SELECT "email", "username", "password", "isSuperUser" FROM "AppUser" WHERE "email" = %s',
+                    [email]
+                )
+                user_data = cursor.fetchone()
 
-        # Authentification
-        user = authenticate(request, username=email, password=password)
-        if user:
-            refresh = RefreshToken.for_user(user)
-            return Response({
-                'refresh': str(refresh),
-                'access': str(refresh.access_token),
-                'username': user.username,
-                'email' : email
-            })
-        else:
-            print("Authentication failed")
-            return Response({'non_field_errors': ['Invalid email or password']}, status=status.HTTP_400_BAD_REQUEST)
+                if user_data:
+                    stored_email, stored_username, stored_password, is_super_user = user_data
+
+                    # Vérifier le mot de passe haché
+                    if check_password(password, stored_password):
+                        # Générer les tokens JWT
+                        refresh = RefreshToken.for_user(AppUser(email=stored_email))
+
+                        return Response({
+                            'refresh': str(refresh),
+                            'access': str(refresh.access_token),
+                            'username': stored_username,
+                            'email': stored_email,
+                            'isSuperUser': is_super_user
+                        })
+
+                return Response({'non_field_errors': ['Email ou mot de passe incorrect']}, status=status.HTTP_400_BAD_REQUEST)
+
+        except Exception as e:
+            return Response({"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class LogoutView(APIView):
@@ -86,7 +107,6 @@ class SpecificationsByCarView(APIView):
     def get(self, request, model_name_car):
         try:
             with connection.cursor() as cursor:
-                # SQL Query to fetch specifications and their associated engines
                 query = """
                     SELECT 
                         s."id" AS specification_id,
@@ -119,11 +139,10 @@ class SpecificationsByCarView(APIView):
                 cursor.execute(query, [model_name_car])
                 results = cursor.fetchall()
 
-            # If no specifications are found
             if not results:
                 return Response({"error": "No specifications found for this car"}, status=status.HTTP_404_NOT_FOUND)
 
-            # Format the results into JSON response
+            # Resultats -> format JSON
             specifications_dict = {}
             for row in results:
                 spec_id = row[0]
@@ -150,7 +169,6 @@ class SpecificationsByCarView(APIView):
                         },
                         "engines": []
                     }
-                # Add engine details if present
                 if row[13]:
                     specifications_dict[spec_id]["engines"].append({
                         "modelName": row[13],
@@ -160,7 +178,6 @@ class SpecificationsByCarView(APIView):
                         "brandName": row[17]
                     })
 
-            # Convert specifications_dict to a list
             specifications = list(specifications_dict.values())
 
             return Response(specifications, status=status.HTTP_200_OK)
@@ -198,7 +215,7 @@ class CarDetailsView(APIView):
                 "releaseDate": rows[0][2],
                 "defaultPrice": rows[0][3],
                 "brandName": rows[0][4],
-                "images": [{"image": row[5]} for row in rows if row[5]]  # Collect all images
+                "images": [{"image": row[5]} for row in rows if row[5]]
             }
 
             return Response(car_details, status=status.HTTP_200_OK)
@@ -210,7 +227,7 @@ class SearchCarsView(APIView):
     def get(self, request):
         car_name = request.query_params.get("carName", "")
         car_brand = request.query_params.get("carBrand", "")
-        car_engine = request.query_params.get("carEngine", "").lower()  # "essence" ou "electrique"
+        car_engine = request.query_params.get("carEngine", "").lower()
         car_power = request.query_params.get("carPower", None)
 
         try:
@@ -246,7 +263,6 @@ class SearchCarsView(APIView):
                 cursor.execute(query, params)
                 results = cursor.fetchall()
 
-            # Formater les résultats
             cars = {}
             for row in results:
                 model_name = row[0]
@@ -259,7 +275,7 @@ class SearchCarsView(APIView):
                         "brandName": row[4],
                         "images": [],
                     }
-                if row[5]:  # Ajouter l'image si elle existe
+                if row[5]:
                     cars[model_name]["images"].append({"image": row[5]})
 
             return Response(list(cars.values()), status=status.HTTP_200_OK)
@@ -280,7 +296,6 @@ class ReviewsBySpecificationView(APIView):
                 cursor.execute(query, [spec_id])
                 reviews = cursor.fetchall()
 
-            # Format the data
             data = [
                 {
                     "id": review[0],
@@ -305,30 +320,50 @@ class AddReviewView(APIView):
             data = request.data
             current_date = now().date()
 
-            # Valider explicitement que la date est correcte
             if "date" in data and data["date"] > current_date:
                 return Response(
                     {"error": "La date de la review ne peut pas être dans le futur."},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            review = Review.objects.create(
-                title=data["title"],
-                content=data.get("content", ""),
-                grade=data["grade"],
-                date=current_date,  # Forcer la date à aujourd'hui
-                idSpecification_id=data["idSpecification"],
-                emailUser_id=data["emailUser"],
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    """
+                    INSERT INTO "Review" ("title", "content", "grade", "date", "idSpecification", "emailUser")
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                    RETURNING "id"
+                    """,
+                    [
+                        data["title"],
+                        data.get("content", ""),
+                        data["grade"],
+                        current_date,
+                        data["idSpecification"],
+                        data["emailUser"],
+                    ],
+                )
+                review_id = cursor.fetchone()[0]
+
+                cursor.execute(
+                    """
+                    SELECT "username" FROM "AppUser" WHERE "email" = %s
+                    """,
+                    [data["emailUser"]],
+                )
+                user_data = cursor.fetchone()
+                username = user_data[0] if user_data else "Utilisateur inconnu"
+
+            return Response(
+                {
+                    "id": review_id,
+                    "title": data["title"],
+                    "content": data.get("content", ""),
+                    "grade": data["grade"],
+                    "date": current_date,
+                    "username": username,
+                },
+                status=status.HTTP_201_CREATED,
             )
-            review.save()
-            return Response({
-                "id": review.id,
-                "title": review.title,
-                "content": review.content,
-                "grade": review.grade,
-                "date": review.date,
-                "username": review.emailUser.username
-            }, status=status.HTTP_201_CREATED)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -337,25 +372,172 @@ class AddModificationView(APIView):
     def post(self, request):
         try:
             data = request.data
-            
-            car = Car.objects.get(modelName=data["modelNameCar"])
-            user_suggests = AppUser.objects.get(email=data["emailUserSuggests"])
-            user_manages = None
-            
-            modif = Modification.objects.create(
-                text=data["text"],
-                isAccepted=None,
-                modelNameCar=car,
-                emailUserSuggests=user_suggests,
-                emailUserManages=user_manages
+
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    """
+                    SELECT 1 FROM "Car" WHERE "modelName" = %s
+                    """,
+                    [data["modelNameCar"]],
+                )
+                if cursor.fetchone() is None:
+                    return Response({"error": "Car not found"}, status=status.HTTP_400_BAD_REQUEST)
+
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    """
+                    SELECT 1 FROM "AppUser" WHERE "email" = %s
+                    """,
+                    [data["emailUserSuggests"]],
+                )
+                if cursor.fetchone() is None:
+                    return Response({"error": "User not found"}, status=status.HTTP_400_BAD_REQUEST)
+
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    """
+                    INSERT INTO "Modification" ("text", "isAccepted", "modelNameCar", "emailUserSuggests", "emailUserManages")
+                    VALUES (%s, %s, %s, %s, NULL)
+                    RETURNING "id", "text", "isAccepted", "modelNameCar", "emailUserSuggests", "emailUserManages"
+                    """,
+                    [data["text"], None, data["modelNameCar"], data["emailUserSuggests"]],
+                )
+                modification = cursor.fetchone()
+
+            return Response(
+                {
+                    "id": modification[0],
+                    "text": modification[1],
+                    "isAccepted": modification[2],
+                    "modelNameCar": modification[3],
+                    "emailUserSuggests": modification[4],
+                    "emailUserManages": modification[5],
+                },
+                status=status.HTTP_201_CREATED,
             )
-            
-            serializer = ModificationSerializer(modif)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        
-        except Car.DoesNotExist:
-            return Response({"error": "Car not found"}, status=status.HTTP_400_BAD_REQUEST)
-        except AppUser.DoesNotExist:
-            return Response({"error": "User not found"}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class GetModificationsView(APIView):
+    def get(self, request):
+        try:
+            # Récupérer l'email utilisateur depuis les en-têtes de la requete axios
+            email = request.headers.get("X-User-Email")
+            if not email:
+                return Response({"error": "Email utilisateur manquant"}, status=status.HTTP_400_BAD_REQUEST)
+
+            query = """
+                SELECT m."id", m."text", m."isAccepted", m."modelNameCar", m."emailUserSuggests", m."emailUserManages"
+                FROM "Modification" m
+                WHERE m."emailUserManages" IS NULL OR m."emailUserManages" = %s
+            """
+            with connection.cursor() as cursor:
+                cursor.execute(query, [email])
+                results = cursor.fetchall()
+
+            modifications = [
+                {
+                    "id": row[0],
+                    "text": row[1],
+                    "isAccepted": row[2],
+                    "modelNameCar": row[3],
+                    "emailUserSuggests": row[4],
+                    "emailUserManages": row[5],
+                }
+                for row in results
+            ]
+
+            return Response(modifications, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+class UpdateModificationView(APIView):
+    def put(self, request, modification_id):
+        try:
+            # Récupérer l'email utilisateur depuis les en-têtes de la requete axios
+            email = request.headers.get("X-User-Email")
+            if not email:
+                return Response({"error": "Email utilisateur manquant"}, status=status.HTTP_400_BAD_REQUEST)
+
+            data = request.data
+            is_accepted = data.get("isAccepted")
+
+            query = """
+                UPDATE "Modification"
+                SET "isAccepted" = %s, "emailUserManages" = %s
+                WHERE "id" = %s
+            """
+            with connection.cursor() as cursor:
+                cursor.execute(query, [is_accepted, email, modification_id])
+
+            return Response({"message": "Modification mise à jour avec succès !"}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UserListView(APIView):
+    def get(self, request):
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute('SELECT "email", "username", "isSuperUser" FROM "AppUser"')
+                users = [
+                    {"email": row[0], "username": row[1], "isSuperUser": row[2]}
+                    for row in cursor.fetchall()
+                ]
+            return JsonResponse(users, safe=False, status=status.HTTP_200_OK)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class CreateUserView(APIView):
+    def post(self, request):
+        try:
+            email = request.data.get("email")
+            username = request.data.get("username")
+            password = request.data.get("password")
+            is_superuser = request.data.get("isSuperUser", False)
+
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    '''
+                    INSERT INTO "AppUser" ("email", "username", "password", "isSuperUser")
+                    VALUES (%s, %s, %s, %s)
+                    ''',
+                    [email, username, password, is_superuser],
+                )
+            return JsonResponse({"message": "User created successfully!"}, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UpdateUserView(APIView):
+    def put(self, request, email):
+        try:
+            username = request.data.get("username")
+            is_superuser = request.data.get("isSuperUser")
+
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    '''
+                    UPDATE "AppUser"
+                    SET "username" = %s, "isSuperUser" = %s
+                    WHERE "email" = %s
+                    ''',
+                    [username, is_superuser, email],
+                )
+            return JsonResponse({"message": "User updated successfully!"}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class DeleteUserView(APIView):
+    def delete(self, request, email):
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute('DELETE FROM "AppUser" WHERE "email" = %s', [email])
+            return JsonResponse({"message": "User deleted successfully!"}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
