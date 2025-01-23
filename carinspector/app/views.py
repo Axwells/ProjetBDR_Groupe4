@@ -2,13 +2,14 @@ from django.shortcuts import render
 from django.db import connection
 from django.http import HttpResponse
 from django.contrib.auth import authenticate
+from django.utils.timezone import now
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .models import Brand, AppUser, Car, Specification
-from .serializers import BrandSerializer, RegisterSerializer, LoginSerializer, CarSerializer, SpecificationSerializer
+from .models import Brand, AppUser, Car, Specification, Review
+from .serializers import BrandSerializer, RegisterSerializer, LoginSerializer, CarSerializer, SpecificationSerializer, ReviewSerializer
 
 
 # from app.mixins import ModelViewSet #soit on le crée soit ça tej
@@ -62,7 +63,8 @@ class LoginView(APIView):
             return Response({
                 'refresh': str(refresh),
                 'access': str(refresh.access_token),
-                'username': user.username  # Include the username in the response
+                'username': user.username,
+                'email' : email
             })
         else:
             print("Authentication failed")
@@ -263,3 +265,69 @@ class SearchCarsView(APIView):
             return Response(list(cars.values()), status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class ReviewsBySpecificationView(APIView):
+    def get(self, request, spec_id):
+        try:
+            with connection.cursor() as cursor:
+                query = """
+                    SELECT r."id", r."title", r."content", r."grade", r."date", u."username"
+                    FROM "Review" r
+                    INNER JOIN "AppUser" u ON r."emailUser" = u."email"
+                    WHERE r."idSpecification" = %s
+                """
+                cursor.execute(query, [spec_id])
+                reviews = cursor.fetchall()
+
+            # Format the data
+            data = [
+                {
+                    "id": review[0],
+                    "title": review[1],
+                    "content": review[2],
+                    "grade": review[3],
+                    "date": review[4],
+                    "username": review[5],
+                }
+                for review in reviews
+            ]
+
+            return Response(data, status=status.HTTP_200_OK)
+        
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class AddReviewView(APIView):
+    def post(self, request):
+        try:
+            data = request.data
+            current_date = now().date()
+
+            # Valider explicitement que la date est correcte
+            if "date" in data and data["date"] > current_date:
+                return Response(
+                    {"error": "La date de la review ne peut pas être dans le futur."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            review = Review.objects.create(
+                title=data["title"],
+                content=data.get("content", ""),
+                grade=data["grade"],
+                date=current_date,  # Forcer la date à aujourd'hui
+                idSpecification_id=data["idSpecification"],
+                emailUser_id=data["emailUser"],
+            )
+            review.save()
+            return Response({
+                "id": review.id,
+                "title": review.title,
+                "content": review.content,
+                "grade": review.grade,
+                "date": review.date,
+                "username": review.emailUser.username
+            }, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)

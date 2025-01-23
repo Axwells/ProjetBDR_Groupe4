@@ -33,8 +33,9 @@ const handleLogout = () => {
 onMounted(() => {
   const token = localStorage.getItem('accessToken');
   const username = localStorage.getItem('username');
-  if (token && username) {
-    authStore.setLoginStatus(true, username);
+  const email = localStorage.getItem('email');
+  if (token && username && email) {
+    authStore.setLoginStatus(true, username, email);
   }
 });
 </script>

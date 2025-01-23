@@ -1,6 +1,9 @@
 <template>
   <div class="cars-page">
     <header class="main-header">
+    <div v-if="authStore.isLoggedIn" class="user-info">
+        <p>Connecté en tant que : <strong>{{ authStore.username }}</strong></p>
+      </div>
       <h1>Résultats de la Recherche</h1>
     </header>
 
@@ -49,6 +52,7 @@
 import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import axios from "axios";
+import { authStore } from '../store';
 
 const route = useRoute();
 const router = useRouter();

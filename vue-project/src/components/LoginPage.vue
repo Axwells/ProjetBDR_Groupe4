@@ -51,6 +51,7 @@ const handleLogin = async () => {
     localStorage.setItem('accessToken', response.data.access);
     localStorage.setItem('refreshToken', response.data.refresh);
     localStorage.setItem('username', response.data.username);
+    localStorage.setItem('email', response.data.email);
 
     // Update login state
     window.location.href = '/'; // Redirect to homepage

@@ -1,8 +1,8 @@
 <template>
     <div class="homepage">
         <header class="main-header">
-            <div class="user-info">
-                <p>Connecté en tant que : <strong>{{ username }}</strong></p>
+            <div v-if="authStore.isLoggedIn" class="user-info">
+                <p>Connecté en tant que : <strong>{{ authStore.username }}</strong></p>
             </div>
             <h1>Bienvenue sur le Dictionnaire de Voitures</h1>
         </header>
@@ -36,6 +36,7 @@
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
+import { authStore } from '../store';
 
 const username = "Jean Dupont"; // Remplacez par une donnée dynamique si nécessaire
 const brands = ref([]);
