@@ -8,8 +8,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .models import Brand, AppUser, Car, Specification, Review
-from .serializers import BrandSerializer, RegisterSerializer, LoginSerializer, CarSerializer, SpecificationSerializer, ReviewSerializer
+from .models import Brand, AppUser, Car, Specification, Review, Modification
+from .serializers import BrandSerializer, RegisterSerializer, LoginSerializer, CarSerializer, SpecificationSerializer, ReviewSerializer, ModificationSerializer
 
 
 # from app.mixins import ModelViewSet #soit on le crée soit ça tej
@@ -329,5 +329,33 @@ class AddReviewView(APIView):
                 "date": review.date,
                 "username": review.emailUser.username
             }, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class AddModificationView(APIView):
+    def post(self, request):
+        try:
+            data = request.data
+            
+            car = Car.objects.get(modelName=data["modelNameCar"])
+            user_suggests = AppUser.objects.get(email=data["emailUserSuggests"])
+            user_manages = None
+            
+            modif = Modification.objects.create(
+                text=data["text"],
+                isAccepted=None,
+                modelNameCar=car,
+                emailUserSuggests=user_suggests,
+                emailUserManages=user_manages
+            )
+            
+            serializer = ModificationSerializer(modif)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
+        except Car.DoesNotExist:
+            return Response({"error": "Car not found"}, status=status.HTTP_400_BAD_REQUEST)
+        except AppUser.DoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)

@@ -10,7 +10,6 @@ import CarsPage from './components/CarsPage.vue'
 import SpecsPage from './components/SpecsPage.vue';
 
 
-
 const routes = [
     {
         path: '/',

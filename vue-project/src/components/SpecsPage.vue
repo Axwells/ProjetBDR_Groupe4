@@ -30,6 +30,8 @@
         </div>
         <p v-else>Aucune image disponible pour ce modèle.</p>
       </div>
+      <button v-if="authStore.isLoggedIn" @click="showModifForm = true" class="btn-add-review">Proposer une modification</button>
+          <p v-else>Connectez-vous pour proposer une modification.</p>
     </section>
 
     <div class="main-content">
@@ -95,6 +97,19 @@
         </form>
       </div>
     </div>
+
+    <div v-if="showModifForm" class="modal-overlay">
+      <div class="modal-content">
+        <h2>Proposer une modification</h2>
+        <form @submit.prevent="addModif">
+          <label for="title">Texte :</label>
+          <input type="text" id="title" v-model="newModif.text" required />
+
+          <button type="submit">Envoyer</button>
+          <button type="button" @click="showModifForm = false">Annuler</button>
+        </form>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -110,13 +125,19 @@ const car = ref(null); // Informations de la voiture
 const specs = ref([]);
 const selectedSpec = ref(null);
 const reviews = ref([]);
+const modifications = ref([]);
 const showReviewForm = ref(false);
+const showModifForm = ref(false);
 
 // New review form data
 const newReview = ref({
   title: "",
   content: "",
   grade: 1,
+});
+
+const newModif = ref({
+  text: "",
 });
 
 // Récupération des informations de la voiture
@@ -192,6 +213,22 @@ const addReview = async () => {
   }
 };
 
+
+const addModif = async () => {
+  try {
+    const response = await axios.post("http://127.0.0.1:8000/app/modifications/add/", {
+      text: newModif.value.text,
+      modelNameCar: modelName.value,
+      emailUserSuggests: authStore.email,
+    });
+
+    modifications.value.push(response.data);
+    newModif.value = { text: "" };
+    showModifForm.value = false;
+  } catch (error) {
+    console.error("Erreur lors de l'ajout de la proposition de modifications :", error);
+  }
+};
 </script>
 
 <style src="../assets/main.css"></style>

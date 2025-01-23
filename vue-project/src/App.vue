@@ -25,6 +25,7 @@ const handleLogout = () => {
   localStorage.removeItem('accessToken');
   localStorage.removeItem('refreshToken');
   localStorage.removeItem('username');
+  localStorage.removeItem('email');
   
   authStore.setLoginStatus(false); // Met à jour l'état global
   alert('Vous êtes déconnecté');

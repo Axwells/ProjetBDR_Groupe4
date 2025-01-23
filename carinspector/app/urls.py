@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import BrandListView, RegisterView, LoginView, LogoutView, SpecificationsByCarView, CarDetailsView, SearchCarsView, ReviewsBySpecificationView, AddReviewView
+from .views import BrandListView, RegisterView, LoginView, LogoutView, SpecificationsByCarView, CarDetailsView, SearchCarsView, ReviewsBySpecificationView, AddReviewView, AddModificationView
 from . import views
 
 urlpatterns = [
@@ -12,4 +12,5 @@ urlpatterns = [
     path("search", SearchCarsView.as_view(), name="search-cars"),
     path('reviews/<int:spec_id>/', ReviewsBySpecificationView.as_view(), name='reviews-by-specification'),
     path('reviews/add/', AddReviewView.as_view(), name='add-review'),
+    path('modifications/add/', AddModificationView.as_view(), name='add-modification'),
 ]

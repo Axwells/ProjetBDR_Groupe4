@@ -111,7 +111,7 @@ class Modification(models.Model):
     isAccepted = models.BooleanField(null=True, db_column="isAccepted")
     modelNameCar = models.ForeignKey(Car, on_delete=models.CASCADE, db_column="modelNameCar")
     emailUserSuggests = models.ForeignKey(AppUser, on_delete=models.RESTRICT, db_column="emailUserSuggests", related_name="suggestedModifications")
-    emailUserManages = models.ForeignKey(AppUser, on_delete=models.RESTRICT, db_column="emailUserManages", related_name="managedModifications")
+    emailUserManages = models.ForeignKey(AppUser, on_delete=models.RESTRICT, db_column="emailUserManages", related_name="managedModifications", null=True)
 
     class Meta:
         db_table = "Modification"

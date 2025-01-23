@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Brand, Car, AppUser, Image, Brake, Engine, Transmission, Performance, Category, Specification, SpecificationEngine, CategorySpecification, Review
+from .models import Brand, Car, AppUser, Image, Brake, Engine, Transmission, Performance, Category, Specification, SpecificationEngine, CategorySpecification, Review, Modification
 from django.contrib.auth import authenticate
 
 class BrandSerializer(serializers.ModelSerializer):
@@ -79,3 +79,9 @@ class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
         fields = ['title', 'content', 'grade', 'idSpecification', 'emailUser']
+
+
+class ModificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Modification
+        fields = ['id', 'text', 'isAccepted', 'modelNameCar', 'emailUserSuggests', 'emailUserManages']
