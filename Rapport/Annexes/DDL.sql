@@ -191,7 +191,7 @@ CREATE TABLE "Review"(
 	"emailUser" VARCHAR(320) NOT NULL,
 	CONSTRAINT "PK_Review" PRIMARY KEY ("id"),
 	CONSTRAINT "FK_Review_idSpecification" FOREIGN KEY ("idSpecification") REFERENCES "Specification"("id") ON UPDATE CASCADE ON DELETE CASCADE,
-	CONSTRAINT "FK_Review_emailUser" FOREIGN KEY ("emailUser") REFERENCES "AppUser"("email") ON UPDATE CASCADE ON DELETE SET NULL,
+	CONSTRAINT "FK_Review_emailUser" FOREIGN KEY ("emailUser") REFERENCES "AppUser"("email") ON UPDATE CASCADE ON DELETE CASCADE,
 	CONSTRAINT "CK_Review_grade" CHECK("grade" > 0 AND "grade" <= 5),
 	CONSTRAINT "CK_Review_date" CHECK("date" <= CURRENT_DATE)
 );

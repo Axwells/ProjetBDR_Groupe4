@@ -280,7 +280,7 @@ class Review(models.Model):
     grade = models.PositiveIntegerField(db_column="grade")
     date = models.DateField(db_column="date")
     idSpecification = models.ForeignKey("Specification", on_delete=models.CASCADE, db_column="idSpecification")
-    emailUser = models.ForeignKey("AppUser", on_delete=models.SET_NULL, db_column="emailUser", null=True, blank=True)
+    emailUser = models.ForeignKey("AppUser", on_delete=models.CASCADE, db_column="emailUser")
 
     class Meta:
         db_table = "Review"
